@@ -604,6 +604,7 @@ input {
 }
 
 /* MEDIA QUERIES */
+
 @media (max-width: 768px) {
   .landing__content {
     display: flex;
