@@ -1,8 +1,7 @@
 import HomeClient from "./HomeClient";
 
 function Home() {
- 
-  return <HomeClient />
+  return <HomeClient />;
 }
 
 export default Home;

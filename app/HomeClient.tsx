@@ -160,7 +160,7 @@ export default function HomeClient() {
                         </div>
                       </div>
                     </div>
-                       <div className="statistics__content--header statistics__content--header-second">
+                    <div className="statistics__content--header statistics__content--header-second">
                       <div className="statistics__heading">
                         Expand your learning
                       </div>
