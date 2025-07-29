@@ -822,7 +822,7 @@ input {
   flex-direction: column;
   padding-top: 32px;
   border-bottom-right-radius: 20px;
-  /* position: fixed; */
+  position: fixed;
 }
 .sidebar__logo {
     display: flex

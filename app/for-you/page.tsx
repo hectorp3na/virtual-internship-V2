@@ -14,8 +14,10 @@ export default function ForYouPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 py-6 px-8 overflow-y-auto p">
+      <main className="flex-1 py-6 px-8 ml-[200px] overflow-y-auto p">
+        <div className="border-b border-[#e1e7ea] mb-6 w-full">
         <SearchBar />
+        </div>
         <div className="mt-10">
           <SelectedForYou />
         </div>
