@@ -189,7 +189,7 @@ export default function BookPage() {
                 </div>
                 <a
                   href="#"
-                  className="flex items-center !text-blue-600 hover:black] text-lg font-semibold mb-7 hover:underline gap-2transition-colors duration-200"
+                  className="flex items-center !text-blue-600 hover:black] text-lg font-semibold mb-7 hover:underline transition-colors duration-200 gap-2"
                 >
                   <svg
                     height="2em"
