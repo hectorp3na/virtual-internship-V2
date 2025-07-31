@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import React from "react";
+import { useState } from "react";
 import {
   FiHome,
   FiBook,
@@ -12,8 +13,20 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 
-const Sidebar = () => {
+const fontSizes = [
+  { size: "small", label: "Aa", px: 16 },
+  { size: "medium", label: "Aa", px: 18 },
+  { size: "large", label: "Aa", px: 22 },
+  { size: "xlarge", label: "Aa", px: 26 },
+];
+
+
+const Sidebar = ({ activeSize, setActiveSize }) => {
   const pathname = usePathname();
+
+   const isPlayerPage =
+    /^\/player\/[^/]+$/.test(pathname);
+  
 
   const menuLinksTop = [
     {
@@ -38,6 +51,7 @@ const Sidebar = () => {
       icon: <FiSearch />,
       disabled: true,
     },
+    
   ];
 
   const menuLinksBottom = [
@@ -56,7 +70,7 @@ const Sidebar = () => {
       href: "/logout",
       text: "Logout",
       icon: <FiLogOut />,
-      // No need for active on logout
+
     },
   ];
 
@@ -87,7 +101,34 @@ const Sidebar = () => {
           {menuLinksTop.map((item, i) => (
             <SidebarLink key={i} {...item} />
           ))}
+          {isPlayerPage && (
+          <div className="flex gap-4 items-end justify-center">
+          {fontSizes.map((f) => (
+            <button
+              key={f.size}
+              onClick={() => setActiveSize(f.size)}
+              className="flex flex-col items-center focus:outline-none"
+            >
+              <span
+                className={`
+                  font-sans font-semibold ${f.svgClass} transition-all
+                  ${activeSize === f.size ? "text-[#032b41]" : "text-[#032b41]"}
+                `}
+                style={{
+                  fontSize: f.px,
+                  letterSpacing: 1.1,
+                }}
+              >
+                {f.label}
+              </span>
+              {activeSize === f.size && (
+                <div className="w-6 h-1 mt-1 rounded bg-[#2bd97c]" />
+              )}
+            </button>
+          ))}
         </div>
+          )}
+        </div>  
         <div className="sidebar__bottom">
           {menuLinksBottom.map((item, i) => (
             <SidebarLink key={i} {...item} />
@@ -102,20 +143,20 @@ const SidebarLink = ({ href, text, icon, active, disabled }) => {
   const Wrapper = href && !disabled ? "a" : "div";
   return (
     <Wrapper
-      className={`sidebar__link--wrapper ${
-        disabled ? "sidebar__link--not-allowed" : ""
-      }`}
+      className={`
+        flex items-center gap-3 py-2 px-3 rounded transition
+        ${active ? "bg-[#f1f6f4] font-bold" : ""}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-[#f1f6f4]"}
+      `}
       href={href || "#"}
       tabIndex={disabled ? -1 : 0}
       aria-disabled={disabled}
       style={{
         pointerEvents: disabled ? "none" : "auto",
-        opacity: disabled ? 0.55 : 1,
       }}
     >
-      <div className={`sidebar__link--line ${active ? "active--tab" : ""}`} />
-      <div className="sidebar__icon--wrapper">{icon}</div>
-      <div className="sidebar__link--text">{text}</div>
+      <span className="text-lg">{icon}</span>
+      <span>{text}</span>
     </Wrapper>
   );
 };
