@@ -1,5 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useAuthModal } from "../../../contexts/AuthModalContext";
+import LoginModal from "../../../components/LoginModal";
+import { useAuth } from "../../hooks/useAuth";
+import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import Sidebar from "../../../components/Sidebar";
 import SearchBar from "../../../components/SearchBar";
@@ -32,10 +36,34 @@ type Book = {
 };
 
 export default function BookPage() {
+  const { openAuth } = useAuthModal();
   const params = useParams();
   const id = params.id as string | undefined;
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const router = useRouter();
+  const handleReadOrListen = (type: "read" | "listen") => {
+    if (!user) {
+      openAuth();
+      return;
+    }
+    if (book?.subscriptionRequired && !user.isSubscribed) {
+      router.push("/choose-plan");
+      return;
+    }
+    // If user is subscribed or book is free
+    router.push(`/player/${book.id}`);
+  };
+
+  // For add to library:
+  const handleAddToLibrary = () => {
+    if (!user) {
+      openAuth();
+      return;
+    }
+    alert("Added to library!");
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -128,6 +156,7 @@ export default function BookPage() {
                 {/* CTA Buttons */}
                 <div className="flex gap-4 mb-6">
                   <button
+                    onClick={() => handleReadOrListen("read")}
                     className="  flex items-center
     justify-center
     w-[144px]
@@ -146,7 +175,7 @@ export default function BookPage() {
                     <svg
                       stroke="currentColor"
                       fill="currentColor"
-                      stroke-width="0"
+                      strokeWidth="0"
                       viewBox="0 0 1024 1024"
                       height="1.5em"
                       width="2em"
@@ -157,6 +186,7 @@ export default function BookPage() {
                     Read
                   </button>
                   <button
+                    onClick={() => handleReadOrListen("listen")}
                     className="  flex
     items-center
     justify-center
@@ -187,9 +217,9 @@ export default function BookPage() {
                     Listen
                   </button>
                 </div>
-                <a
-                  href="#"
-                  className="flex items-center !text-blue-600 hover:black] text-lg font-semibold mb-7 hover:underline transition-colors duration-200 gap-2"
+                <button
+                  onClick={handleAddToLibrary}
+                  className="flex items-center text-blue-600 hover:text-blue-900 text-lg font-semibold mb-7 hover:underline transition-colors duration-200 gap-2"
                 >
                   <svg
                     height="2em"
@@ -207,7 +237,7 @@ export default function BookPage() {
                     />{" "}
                   </svg>
                   Add title to My Library
-                </a>
+                </button>
 
                 {/* Book description */}
                 <div className="mb-7">

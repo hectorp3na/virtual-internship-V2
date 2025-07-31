@@ -6,17 +6,19 @@ import { AiFillAudio, AiFillBulb, AiFillFileText } from "react-icons/ai";
 import { BiCrown } from "react-icons/bi";
 import { BsStarFill, BsStarHalf } from "react-icons/bs";
 import { RiLeafLine } from "react-icons/ri";
-import { useState } from "react";
+import { useAuthModal } from "../contexts/AuthModalContext";
+import { AuthModalProvider } from "../contexts/AuthModalContext";
+import { useAuth } from "./hooks/useAuth";
 
 export default function HomeClient() {
-  const [showAuth, setShowAuth] = useState(false);
+  const { openAuth } = useAuthModal();
 
   return (
     <>
       <div id="__next">
         <div className="wrapper wrapper__full">
           <div className="sidebar__overlay sidebar__overlay--hidden">
-            <Nav onLoginClick={() => setShowAuth(true)} />
+            <Nav onLoginClick={openAuth} />
             {/* LANDING SECTION */}
             <section id="landing">
               <div className="container">
@@ -36,7 +38,7 @@ export default function HomeClient() {
                       </div>
                       <button
                         className="btn home__cta--btn"
-                        onClick={() => setShowAuth(true)}
+                        onClick={openAuth}
                       >
                         Login
                       </button>
@@ -268,7 +270,7 @@ export default function HomeClient() {
                   <div className="reviews__btn--wrapper">
                     <button
                       className="btn home__cta--btn"
-                      onClick={() => setShowAuth(true)}
+                      onClick={openAuth}
                     >
                       Login
                     </button>
@@ -323,7 +325,7 @@ export default function HomeClient() {
           </div>
         </div>
       </div>
-      {showAuth && <LoginModal onClose={() => setShowAuth(false)} />}
+
       <Footer />
     </>
   );
