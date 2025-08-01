@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useAuthModal } from "../../../contexts/AuthModalContext";
 import LoginModal from "../../../components/LoginModal";
-import { useAuth } from "../../hooks/useAuth";
+import { useAuth } from "../../../app/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { useParams } from "next/navigation";
 import Sidebar from "../../../components/Sidebar";
@@ -234,7 +234,7 @@ export default function BookPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="M5 5v14l7-5 7 5V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"
-                    />{" "}
+                    /> 
                   </svg>
                   Add title to My Library
                 </button>
@@ -280,7 +280,7 @@ export default function BookPage() {
               book && (
                 <figure className="w-64 h-80 relative rounded-md flex items-center justify-center">
                   <img
-                    src={book.imageLink || book.img}
+                    src={book.imageLink || book.img || "/fallback.jpg"}
                     alt={book.title}
                     className="w-full object-cover rounded-md"
                   />

@@ -1,8 +1,9 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Dispatch, SetStateAction } from "react";
 import { useParams } from "next/navigation";
 import Sidebar from "../../../components/Sidebar";
 import SearchBar from "../../../components/SearchBar";
+import AudioPlayer from "components/AudioPlayer";
 
 const fontSizes = {
   small: 16,
@@ -16,6 +17,12 @@ type Book = {
   title: string;
   author: string;
   summary?: string;
+  audioLink?: string;
+  imageLink?: string;
+};
+type SidebarProps = {
+  activeSize?: keyof typeof fontSizes;
+  setActiveSize?: Dispatch<SetStateAction<keyof typeof fontSizes>>;
 };
 
 export default function PlayerPage() {
@@ -24,8 +31,8 @@ export default function PlayerPage() {
 
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  const [fontSizeKey, setFontSizeKey] = useState<keyof typeof fontSizes>("small");
+  const [fontSizeKey, setFontSizeKey] =
+    useState<keyof typeof fontSizes>("small");
 
   useEffect(() => {
     if (!id) return;
@@ -65,13 +72,22 @@ export default function PlayerPage() {
               <h1 className="text-2xl font-bold text-[#032b41] border-t border-b border-[#e1e7ea] mb-8 pt-4 pb-4 leading-[1.5]">
                 {book.title}
               </h1>
-              <div className="text-base text-[#032b41] max-w-3xl leading-[1.4] whitespace-pre-line" style={{
+              <div
+                className="text-base text-[#032b41] max-w-3xl leading-[1.4] whitespace-pre-line"
+                style={{
                   fontSize: fontSizes[fontSizeKey],
                   lineHeight: 1.4,
                   transition: "font-size 0.18s cubic-bezier(.65,.05,.36,1)",
-                }}>
+                }}
+              >
                 {book.summary || "No summary available."}
               </div>
+              <AudioPlayer
+                src={book.audioLink}
+                cover={book.imageLink}
+                title={book.title}
+                author={book.author}
+              />
             </>
           ) : (
             <div className="text-gray-400">Book not found.</div>

@@ -1,8 +1,7 @@
-"use client"
+"use client";
 
 import { usePathname } from "next/navigation";
-import React from "react";
-import { useState } from "react";
+import React, { Dispatch, SetStateAction } from "react";
 import {
   FiHome,
   FiBook,
@@ -20,13 +19,17 @@ const fontSizes = [
   { size: "xlarge", label: "Aa", px: 26 },
 ];
 
+type SidebarProps = {
+  activeSize: keyof typeof fontSizes;
+  setActiveSize: Dispatch<SetStateAction<keyof typeof fontSizes>>;
+};
 
-const Sidebar = ({ activeSize, setActiveSize }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  activeSize = "small",
+  setActiveSize,
+}) => {
   const pathname = usePathname();
-
-   const isPlayerPage =
-    /^\/player\/[^/]+$/.test(pathname);
-  
+  const isPlayerPage = /^\/player\/[^/]+$/.test(pathname);
 
   const menuLinksTop = [
     {
@@ -51,7 +54,6 @@ const Sidebar = ({ activeSize, setActiveSize }) => {
       icon: <FiSearch />,
       disabled: true,
     },
-    
   ];
 
   const menuLinksBottom = [
@@ -70,66 +72,53 @@ const Sidebar = ({ activeSize, setActiveSize }) => {
       href: "/logout",
       text: "Logout",
       icon: <FiLogOut />,
-
     },
   ];
 
   return (
     <aside className="sidebar">
-      {/* Logo */}
       <div className="sidebar__logo flex items-center">
-      <img
-    src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.1b1c490b.png&w=640&q=75"
-    alt="Summarist Logo"
-    style={{ objectFit: "contain" }}
-  />
-  <span
-    style={{
-      marginLeft: 12,
-      fontWeight: 700,
-      fontSize: 22,
-      color: "#1A2B49",
-      letterSpacing: "-0.5px",
-    }}
-  >
- 
-  </span>
-</div>
-
+        <img
+          src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.1b1c490b.png&w=640&q=75"
+          alt="Summarist Logo"
+          style={{ objectFit: "contain" }}
+        />
+      </div>
       <div className="sidebar__wrapper">
         <div className="sidebar__top">
           {menuLinksTop.map((item, i) => (
             <SidebarLink key={i} {...item} />
           ))}
-          {isPlayerPage && (
-          <div className="flex gap-4 items-end justify-center">
-          {fontSizes.map((f) => (
-            <button
-              key={f.size}
-              onClick={() => setActiveSize(f.size)}
-              className="flex flex-col items-center focus:outline-none"
-            >
-              <span
-                className={`
-                  font-sans font-semibold ${f.svgClass} transition-all
-                  ${activeSize === f.size ? "text-[#032b41]" : "text-[#032b41]"}
-                `}
-                style={{
-                  fontSize: f.px,
-                  letterSpacing: 1.1,
-                }}
-              >
-                {f.label}
-              </span>
-              {activeSize === f.size && (
-                <div className="w-6 h-1 mt-1 rounded bg-[#2bd97c]" />
-              )}
-            </button>
-          ))}
-        </div>
+          {isPlayerPage && setActiveSize && (
+            <div className="flex gap-4 items-end justify-center">
+              {fontSizes.map((f) => (
+                <button
+                  key={f.size}
+                  onClick={() => setActiveSize(f.size as keyof typeof fontSizes)}
+                  className="flex flex-col items-center focus:outline-none"
+                  type="button"
+                >
+                  <span
+                    className={`
+                      font-sans font-semibold transition-all
+                      ${activeSize === f.size ? "text-[#032b41]" : "text-[#6b7280]"}
+                    `}
+                    style={{
+                      fontSize: f.px,
+                      letterSpacing: 1.1,
+                    }}
+                  >
+                    {f.label}
+                  </span>
+                  {activeSize === f.size && (
+                    <div className="w-6 h-1 mt-1 rounded bg-[#2bd97c]" />
+                  )}
+                </button>
+              ))}
+            </div>
           )}
-        </div>  
-        <div className="sidebar__bottom">
+        </div>
+        <div className={`sidebar__bottom${isPlayerPage ? " pb-[72px]" : ""}`}>
           {menuLinksBottom.map((item, i) => (
             <SidebarLink key={i} {...item} />
           ))}
@@ -139,7 +128,21 @@ const Sidebar = ({ activeSize, setActiveSize }) => {
   );
 };
 
-const SidebarLink = ({ href, text, icon, active, disabled }) => {
+type SidebarLinkProps = {
+  href?: string;
+  text: string;
+  icon: React.ReactNode;
+  active?: boolean;
+  disabled?: boolean;
+};
+
+const SidebarLink: React.FC<SidebarLinkProps> = ({
+  href,
+  text,
+  icon,
+  active,
+  disabled,
+}) => {
   const Wrapper = href && !disabled ? "a" : "div";
   return (
     <Wrapper
