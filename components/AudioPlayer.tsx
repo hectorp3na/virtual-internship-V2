@@ -90,7 +90,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#0e2636] z-50 h-[72px] flex items-center px-8 shadow-2xl border-t border-[#22313b]">
+    <div className="fixed bottom-0 left-0 right-0 bg-[#0e2636] z-50 h-[72px] border-t border-[#22313b] shadow-2xl">
+        <div className="w-full max-w-4xl mx-auto flex items-center px-4 md:px-8 h-full">
       <audio ref={audioRef} src={src} preload="auto" />
       <AudioTrackInfo cover={cover} title={title} author={author} />
       <AudioControls
@@ -106,6 +107,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         formatTime={formatTime}
         durationOverride={durationOverride}
       />
+    </div>
     </div>
   );
 };

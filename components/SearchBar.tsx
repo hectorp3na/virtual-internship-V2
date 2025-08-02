@@ -7,7 +7,7 @@ export default function SearchBar() {
         <input
           type="text"
           placeholder="Search for books"
-          className="w-full rounded-md border-2 border-[#e1e7ea] bg-[#f1f6f4] py-2 pl-4 pr-10 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="w-full rounded-md border-2 border-[#e1e7ea] bg-[#f1f6f4] py-2 pl-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 pr-30"
         />
         <div className="absolute inset-y-0 right-3 flex items-center text-gray-500 border-l-2 border-l-[#e1e7ea] pl-2">
           <svg
