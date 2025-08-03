@@ -5,18 +5,45 @@ interface SidebarLinkProps {
   icon: React.ReactNode;
   text: string;
   disabled?: boolean;
+  active?: boolean;
 }
 
-export default function SidebarLink({ href, icon, text, disabled }: SidebarLinkProps) {
-  const Wrapper = disabled ? "div" : "a";
+const SidebarLink: React.FC<SidebarLinkProps> = ({
+  href,
+  icon,
+  text,
+  disabled = false,
+  active = false,
+}) => {
+ 
+  const Wrapper = href && !disabled ? "a" : "div";
+
   return (
     <Wrapper
-      className={`sidebar__link--wrapper ${disabled ? "sidebar__link--not-allowed" : ""}`}
-      href={disabled ? undefined : href}
+      className={`
+        flex items-center gap-3 py-2 pl-5 pr-3 rounded transition
+        ${active ? "bg-[#f1f6f4] font-bold" : ""}
+        ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-[#f1f6f4]"}
+        relative
+      `}
+      href={href || "#"}
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled}
+      style={{
+        pointerEvents: disabled ? "none" : "auto",
+      }}
     >
-      <div className="sidebar__link--line"></div>
-      <div className="sidebar__icon--wrapper">{icon}</div>
-      <div className="sidebar__link--text">{text}</div>
+      {/* Green active bar on left */}
+      {active && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r bg-[#2bd97c]"
+          style={{ minHeight: 24 }}
+        />
+      )}
+      <span className="text-lg ml-2">{icon}</span>
+      <span>{text}</span>
     </Wrapper>
   );
-}
+};
+
+export default SidebarLink;

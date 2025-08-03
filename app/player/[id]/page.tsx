@@ -33,6 +33,7 @@ export default function PlayerPage() {
   const [loading, setLoading] = useState(true);
   const [fontSizeKey, setFontSizeKey] =
     useState<keyof typeof fontSizes>("small");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -55,12 +56,52 @@ export default function PlayerPage() {
   return (
     <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
-      <aside className="bg-white">
+      <aside className="hidden md:block bg-white">
         <Sidebar activeSize={fontSizeKey} setActiveSize={setFontSizeKey} />
       </aside>
+        {/* Mobile Sidebar Drawer */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div
+            className="fixed inset-0 bg-transparent bg-opacity-40 transition-opacity"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside
+            className="relative z-50 h-full w-[375px] max-w-full bg-[#f6f7fb] flex flex-col shadow-2xl animate-slide-in-left"
+            style={{ minWidth: 320 }}
+          >
+            <Sidebar
+              activeSize={fontSizeKey}
+              setActiveSize={setFontSizeKey}
+              isDrawer
+            />
+          </aside>
+        </div>
+      )}
       {/* Main Content */}
-      <main className="flex-1 px-8 py-6 ml-[200px]">
+      <main className="flex-1 px-8 py-6 ml-0 md:ml-[200px]">
+        <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
+          <div className="flex items-center gap-2">
         <SearchBar />
+          {/* Burger menu for mobile */}
+            <button
+              className="block md:hidden ml-3 p-2 mb-6"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              <svg
+                width="32"
+                height="32"
+                fill="none"
+                stroke="#032b41"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
         <div className="max-w-3xl mx-auto">
           {loading ? (
             <div>

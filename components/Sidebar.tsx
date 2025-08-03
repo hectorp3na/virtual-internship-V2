@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import React, { Dispatch, SetStateAction } from "react";
+import SidebarLink from "./SidebarLink"; 
 import {
   FiHome,
   FiBook,
@@ -22,11 +23,13 @@ const fontSizes = [
 type SidebarProps = {
   activeSize: keyof typeof fontSizes;
   setActiveSize: Dispatch<SetStateAction<keyof typeof fontSizes>>;
+  isDrawer?: boolean;
 };
 
 const Sidebar: React.FC<SidebarProps> = ({
   activeSize = "small",
   setActiveSize,
+  isDrawer = false,
 }) => {
   const pathname = usePathname();
   const isPlayerPage = /^\/player\/[^/]+$/.test(pathname);
@@ -36,7 +39,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       href: "/for-you",
       text: "For you",
       icon: <FiHome />,
-      active: pathname === "/for-you",
+      active: pathname === "/for-you" ||
+       pathname.startsWith("/book/") ||
+      pathname.startsWith("/player/"),
     },
     {
       href: "/library",
@@ -48,11 +53,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       text: "Highlights",
       icon: <FiStar />,
       disabled: true,
+      href: "",
     },
     {
       text: "Search",
       icon: <FiSearch />,
       disabled: true,
+      href: "",
     },
   ];
 
@@ -67,6 +74,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       text: "Help & Support",
       icon: <FiHelpCircle />,
       disabled: true,
+      href: "",
     },
     {
       href: "/logout",
@@ -76,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="sidebar">
+    <aside className={isDrawer ? "sidebar w-full bg-white h-full " : "sidebar fixed"}>
       <div className="sidebar__logo flex items-center">
         <img
           src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.1b1c490b.png&w=640&q=75"
@@ -128,40 +136,5 @@ const Sidebar: React.FC<SidebarProps> = ({
   );
 };
 
-type SidebarLinkProps = {
-  href?: string;
-  text: string;
-  icon: React.ReactNode;
-  active?: boolean;
-  disabled?: boolean;
-};
-
-const SidebarLink: React.FC<SidebarLinkProps> = ({
-  href,
-  text,
-  icon,
-  active,
-  disabled,
-}) => {
-  const Wrapper = href && !disabled ? "a" : "div";
-  return (
-    <Wrapper
-      className={`
-        flex items-center gap-3 py-2 px-3 rounded transition
-        ${active ? "bg-[#f1f6f4] font-bold" : ""}
-        ${disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-[#f1f6f4]"}
-      `}
-      href={href || "#"}
-      tabIndex={disabled ? -1 : 0}
-      aria-disabled={disabled}
-      style={{
-        pointerEvents: disabled ? "none" : "auto",
-      }}
-    >
-      <span className="text-lg">{icon}</span>
-      <span>{text}</span>
-    </Wrapper>
-  );
-};
 
 export default Sidebar;

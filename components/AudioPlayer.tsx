@@ -90,10 +90,27 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-[#0e2636] z-50 h-[72px] border-t border-[#22313b] shadow-2xl">
-        <div className="w-full max-w-4xl mx-auto flex items-center px-4 md:px-8 h-full">
-      <audio ref={audioRef} src={src} preload="auto" />
-      <AudioTrackInfo cover={cover} title={title} author={author} />
+    <div className="fixed bottom-0 left-0 right-0 bg-[#0e2636] z-50 border-t border-[#22313b] shadow-2xl h-auto md:h-[72px] min-h-[90px]">
+  <div className="
+    w-full max-w-4xl mx-auto flex items-center px-4 md:px-8 h-full
+    md:flex-row
+    flex-col
+    justify-between
+    md:justify-normal
+    
+    py-4
+    md:py-0
+    relative
+  ">
+    <audio ref={audioRef} src={src} preload="auto" />
+    
+    {/* Track Info always first */}
+    <div className="flex items-center w-full md:w-auto mb-2 md:mb-0 justify-center md:justify-start">
+  <AudioTrackInfo cover={cover} title={title} author={author} />
+</div>
+
+    {/* Controls & Progress Bar */}
+    <div className="flex flex-col flex-1 w-full md:w-auto md:flex-row items-center gap-2">
       <AudioControls
         isPlaying={isPlaying}
         onPlayPause={handlePlayPause}
@@ -108,7 +125,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         durationOverride={durationOverride}
       />
     </div>
-    </div>
+  </div>
+</div>
   );
 };
 

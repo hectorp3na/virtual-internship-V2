@@ -8,7 +8,7 @@ interface AudioControlsProps {
 }
 
 const AudioControls: React.FC<AudioControlsProps> = ({ isPlaying, onPlayPause, onRewind, onForward }) => (
-  <div className="flex items-center gap-1 mr-6">
+  <div className="flex items-center gap-1 mr-0 md:mr-6 mb-2 md:mb-0">
     {/* Back 10s */}
     <button className="p-2 rounded-full hover:bg-[#123140]" onClick={onRewind} aria-label="Back 10 seconds">
       {/* ... SVG from before ... */}
@@ -24,7 +24,7 @@ const AudioControls: React.FC<AudioControlsProps> = ({ isPlaying, onPlayPause, o
           <rect x="14" y="4" width="4" height="16" rx="1" />
         </svg>
       ) : (
-        <svg width="34" height="34" fill="currentColor" viewBox="0 0 24 24">
+        <svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24">
           <polygon points="6,4 20,12 6,20" />
         </svg>
       )}

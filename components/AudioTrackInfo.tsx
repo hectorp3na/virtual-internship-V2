@@ -14,9 +14,9 @@ const AudioTrackInfo: React.FC<AudioTrackInfoProps> = ({ cover, title, author })
       className="w-12 h-16 object-cover object-top rounded mr-4"
       style={{ minWidth: 48, minHeight: 64 }}
     />
-    <div className="mr-8 min-w-[170px] max-w-[240px]">
-      <div className="text-white font-semibold text-[14px] truncate">{title}</div>
-      <div className="text-xs text-[#d8e7ef] truncate">{author}</div>
+    <div className="mr-4 md:mr-8 min-w-[130px] md:min-w-[170px]  md:max-w-[240px]">
+      <div className="text-white font-semibold text-[14px] ">{title}</div>
+      <div className="text-[14px] text-[#bac8ce] truncate">{author}</div>
     </div>
   </>
 );

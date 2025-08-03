@@ -26,8 +26,8 @@ const AudioProgressBar: React.FC<AudioProgressBarProps> = ({
       value={currentTime}
       step={0.01}
       onChange={onSeek}
-      className="flex-1 accent-white h-[2px] mx-2"
-      style={{ minWidth: 100, maxWidth: 350, accentColor: "#fff" }}
+      className="progress-bar-range accent-white h-[4px] mx-2"
+      style={{ minWidth: 200, maxWidth: 350, accentColor: "#fff" }}
     />
     <span className="text-xs text-white ml-2" style={{ width: 42, textAlign: "left" }}>
       {durationOverride ? durationOverride : formatTime(duration)}

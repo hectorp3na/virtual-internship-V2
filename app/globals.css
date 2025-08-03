@@ -822,7 +822,7 @@ input {
   flex-direction: column;
   padding-top: 32px;
   border-bottom-right-radius: 20px;
-  position: fixed;
+  /* position: fixed; */
 }
 .sidebar__logo {
     display: flex
@@ -890,8 +890,19 @@ input {
   opacity: 0.55;
 }
 
+.progress-bar-range {
+  width: 200px;
+  max-width: 90vh;
+}
+
 
 /* MEDIA QUERIES */
+
+@media (max-width: 767px) {
+  .progress-bar-range {
+    width: 300px;
+  }
+}
 
 @media (max-width: 768px) {
   .landing__content {

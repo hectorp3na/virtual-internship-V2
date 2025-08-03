@@ -43,6 +43,8 @@ export default function BookPage() {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const handleReadOrListen = (type: "read" | "listen") => {
     if (!user) {
       openAuth();
@@ -86,14 +88,50 @@ export default function BookPage() {
   return (
     <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
-      <aside className="bg-white">
+      <aside className="hidden md:block bg-white">
         <Sidebar />
       </aside>
+      {/* Mobile Sidebar Drawer */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div
+            className="fixed inset-0 bg-transparent bg-opacity-40 transition-opacity"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside
+            className="relative z-50 h-full w-[375px] max-w-full bg-[#f6f7fb] flex flex-col shadow-2xl animate-slide-in-left"
+            style={{ minWidth: 320 }}
+          >
+            <Sidebar isDrawer />
+          </aside>
+        </div>
+      )}
+
       {/* Main Content */}
-      <main className="flex-1 px-8 py-6 ml-[200px]">
-        <SearchBar />
+      <main className="flex-1 px-8 py-6 ml-0 md:ml-[200px]">
+        <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
+          <div className="flex items-center gap-2">
+            <SearchBar />
+            {/* Burger menu for mobile */}
+            <button
+              className="block md:hidden ml-3 p-2 mb-6"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open menu"
+            >
+              <svg
+                width="32"
+                height="32"
+                fill="none"
+                stroke="#032b41"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
         <div className="max-w-6xl mx-auto flex flex-col lg:flex-row pt-6 gap-8">
-          {/* Book Info: ORDER FIRST ON DESKTOP */}
           <div className="flex-1 min-w-0 order-2 lg:order-1">
             {loading ? (
               <div className="animate-pulse">
@@ -234,7 +272,7 @@ export default function BookPage() {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                       d="M5 5v14l7-5 7 5V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z"
-                    /> 
+                    />
                   </svg>
                   Add title to My Library
                 </button>
