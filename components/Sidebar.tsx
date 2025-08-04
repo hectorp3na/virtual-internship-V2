@@ -98,7 +98,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <SidebarLink key={i} {...item} />
           ))}
           {isPlayerPage && setActiveSize && (
-            <div className="flex gap-4 items-end justify-center">
+            <div className="flex gap-4 items-end justify-start pl-5">
               {fontSizes.map((f) => (
                 <button
                   key={f.size}
@@ -126,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
-        <div className={`sidebar__bottom${isPlayerPage ? " pb-[72px]" : ""}`}>
+        <div className={`sidebar__bottom${isPlayerPage ? " pb-[72px] max-[767px]:pb-[220px]" : ""}`}>
           {menuLinksBottom.map((item, i) => (
             <SidebarLink key={i} {...item} />
           ))}

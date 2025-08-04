@@ -20,10 +20,7 @@ type Book = {
   audioLink?: string;
   imageLink?: string;
 };
-type SidebarProps = {
-  activeSize?: keyof typeof fontSizes;
-  setActiveSize?: Dispatch<SetStateAction<keyof typeof fontSizes>>;
-};
+
 
 export default function PlayerPage() {
   const params = useParams();
@@ -65,6 +62,7 @@ export default function PlayerPage() {
           <div
             className="fixed inset-0 bg-transparent bg-opacity-40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
+            
           />
           <aside
             className="relative z-50 h-full w-[375px] max-w-full bg-[#f6f7fb] flex flex-col shadow-2xl animate-slide-in-left"
@@ -124,7 +122,7 @@ export default function PlayerPage() {
                 {book.summary || "No summary available."}
               </div>
               <AudioPlayer
-                src={book.audioLink}
+                src={book.audioLink || ""}
                 cover={book.imageLink}
                 title={book.title}
                 author={book.author}
