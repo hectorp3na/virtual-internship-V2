@@ -77,7 +77,7 @@ export default function PlayerPage() {
         </div>
       )}
       {/* Main Content */}
-      <main className="flex-1 px-8 py-6 ml-0 md:ml-[200px]">
+      <main className="flex-1 px-8 pt-6 pb-[200px] ml-0 md:ml-[200px] overflow-y-auto">
         <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
           <div className="flex items-center gap-2">
         <SearchBar />

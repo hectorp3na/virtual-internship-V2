@@ -9,13 +9,14 @@ import RecommendedForYou from "../../components/RecommendedForYou";
 import SuggestedBooks from "../../components/SuggestedBooks";
 
 export default function ForYouPage() {
+  const [activeSize, setActiveSize] = useState<"small" | "medium" | "large" | "xlarge">("small");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
       <aside className=" hidden md:block bg-white ">
-        <Sidebar />
+        <Sidebar activeSize={activeSize} setActiveSize={setActiveSize} />
       </aside>
 
       {/* Mobile Sidebar Drawer */}
@@ -32,7 +33,7 @@ export default function ForYouPage() {
         animate-slide-in-left"
             style={{ minWidth: 320 }}
           >
-            <Sidebar />
+            <Sidebar activeSize={activeSize} setActiveSize={setActiveSize} />
           </aside>
         </div>
       )}

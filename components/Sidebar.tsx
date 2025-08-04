@@ -13,12 +13,12 @@ import {
   FiLogOut,
 } from "react-icons/fi";
 
-const fontSizes = [
-  { size: "small", label: "Aa", px: 16 },
-  { size: "medium", label: "Aa", px: 18 },
-  { size: "large", label: "Aa", px: 22 },
-  { size: "xlarge", label: "Aa", px: 26 },
-];
+const fontSizes = {
+  small: { label: "Aa", px: 16 },
+  medium: { label: "Aa", px: 18 },
+  large: { label: "Aa", px: 22 },
+  xlarge: { label: "Aa", px: 26 },
+} as const;
 
 type SidebarProps = {
   activeSize: keyof typeof fontSizes;
@@ -99,17 +99,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
           {isPlayerPage && setActiveSize && (
             <div className="flex gap-4 items-end justify-start pl-5">
-              {fontSizes.map((f) => (
+             {Object.entries(fontSizes).map(([sizeKey, f]) => (
                 <button
-                  key={f.size}
-                  onClick={() => setActiveSize(f.size as keyof typeof fontSizes)}
+              key={sizeKey}
+    onClick={() => setActiveSize(sizeKey as keyof typeof fontSizes)}
                   className="flex flex-col items-center focus:outline-none"
                   type="button"
                 >
                   <span
                     className={`
                       font-sans font-semibold transition-all
-                      ${activeSize === f.size ? "text-[#032b41]" : "text-[#6b7280]"}
+                      ${activeSize === sizeKey ? "text-[#032b41]" : "text-[#6b7280]"}
                     `}
                     style={{
                       fontSize: f.px,
@@ -118,7 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                   >
                     {f.label}
                   </span>
-                  {activeSize === f.size && (
+                  {activeSize === sizeKey && (
                     <div className="w-6 h-1 mt-1 rounded bg-[#2bd97c]" />
                   )}
                 </button>
@@ -126,7 +126,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
-        <div className={`sidebar__bottom${isPlayerPage ? " pb-[72px] max-[767px]:pb-[220px]" : ""}`}>
+        <div className={`sidebar__bottom ${isPlayerPage ? " pb-[72px] max-[767px]:pb-[220px]" : ""}`}>
           {menuLinksBottom.map((item, i) => (
             <SidebarLink key={i} {...item} />
           ))}
