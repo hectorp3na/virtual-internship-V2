@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 type Book = {
   id: string;
@@ -54,7 +55,7 @@ export default function SelectedForYou() {
       ) : !book ? (
         <div className="text-gray-500">No selected book found.</div>
       ) : (
-        <a
+        <Link
           href={`/book/${book.id}`}
           className="flex items-center bg-[#fbefd6] hover:bg-yellow-100 rounded-lg shadow-sm transition p-6"
         >
@@ -88,7 +89,7 @@ export default function SelectedForYou() {
               alt={book.title}
             />
           </figure>
-        </a>
+        </Link>
       )}
     </div>
   );

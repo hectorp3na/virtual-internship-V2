@@ -5,14 +5,35 @@ import PlanHeader from "../../components/PlanHeader";
 import PlanFeatures from "../../components/PlanFeatures";
 import PlanFAQs from "../../components/PlanFAQs";
 import { useState } from "react";
+import { getAuth } from "firebase/auth";
+import { redirectToStripeCheckout } from "./../../functions/lib/checkout";
 
 export default function ChoosePlanPage() {
+const monthlyPriceId = "price_1RtNU9LaXqGfXK4JikVfj19M"; 
+const yearlyPriceId = "price_1RtNT9LaXqGfXK4JpjOyFOQA"; 
+
   const [isVisible, setIsVisible] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"yearly" | "monthly">(
     "yearly"
   );
+   const handlePlanSubmit = async () => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    const userEmail = user?.email ?? "";
+
+    const selectedPriceId =
+      selectedPlan === "monthly" ? monthlyPriceId : yearlyPriceId;
+
+ try {
+    await redirectToStripeCheckout(selectedPriceId, userEmail);
+  } catch (error) {
+    console.error("Checkout error:", error);
+  }
+};
+
 
   return (
+    <>
     <div className="relative flex flex-col items-center justify-center w-full transition-all">
       <div
         className={`fixed top-0 left-0 w-full h-full bg-[#3a4649] transition-opacity duration-400 ease-linear z-10 ${
@@ -97,13 +118,18 @@ export default function ChoosePlanPage() {
             {/* CTA */}
             <div className="trial-cta-container">
               <span className="btn--wrapper">
-                <button className="trial-button">
-                  <span>Start your free 7-day trial</span>
+                <button className="trial-button" onClick={handlePlanSubmit}>
+                  <span>
+                    {selectedPlan === "monthly"
+                      ? "Start your first month"
+                      : "Start your free 7-day trial"}
+                  </span>
                 </button>
               </span>
               <div className="text-[12px] text-[#6b757b] text-center">
-                Cancel your trial at any time before it ends, and you won’t be
-                charged.
+                {selectedPlan === "monthly"
+                  ? "30-day money back guarantee, no questions asked."
+                  : "Cancel your trial at any time before it ends, and you won’t be charged."}
               </div>
             </div>
           </div>
@@ -114,5 +140,6 @@ export default function ChoosePlanPage() {
         <Footer />
       </div>
     </div>
+    </>
   );
 }

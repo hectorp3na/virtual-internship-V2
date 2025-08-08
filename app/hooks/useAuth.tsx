@@ -7,8 +7,10 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  getAuth,
 } from "firebase/auth";
-import { auth } from "../../firebase";
+import { auth, initFirebase } from "../../firebase";
+import { useRouter } from 'next/navigation';
 
 
 interface AuthContextType {
@@ -26,6 +28,11 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const auth = getAuth();
+  const provider = new GoogleAuthProvider();
+
+ initFirebase();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -70,5 +77,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext) as AuthContextType;
+   const context = useContext(AuthContext) as AuthContextType;
+  return {
+    ...context,
+    currentUser: context.user, 
+  };
 };

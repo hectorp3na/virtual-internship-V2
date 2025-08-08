@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import React, { Dispatch, SetStateAction } from "react";
-import SidebarLink from "./SidebarLink"; 
+import SidebarLink from "./SidebarLink";
 import {
   FiHome,
   FiBook,
@@ -11,6 +11,7 @@ import {
   FiSettings,
   FiHelpCircle,
   FiLogOut,
+  FiLogIn,
 } from "react-icons/fi";
 
 const fontSizes = {
@@ -24,12 +25,18 @@ type SidebarProps = {
   activeSize: keyof typeof fontSizes;
   setActiveSize: Dispatch<SetStateAction<keyof typeof fontSizes>>;
   isDrawer?: boolean;
+  onLogoutClick?: () => void;
+  onLoginClick?: () => void;
+  currentUser: any;
 };
 
 const Sidebar: React.FC<SidebarProps> = ({
   activeSize = "small",
   setActiveSize,
   isDrawer = false,
+  onLogoutClick,
+  onLoginClick,
+  currentUser,
 }) => {
   const pathname = usePathname();
   const isPlayerPage = /^\/player\/[^/]+$/.test(pathname);
@@ -39,9 +46,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       href: "/for-you",
       text: "For you",
       icon: <FiHome />,
-      active: pathname === "/for-you" ||
-       pathname.startsWith("/book/") ||
-      pathname.startsWith("/player/"),
+      active:
+        pathname === "/for-you" ||
+        pathname.startsWith("/book/") ||
+        pathname.startsWith("/player/"),
     },
     {
       href: "/library",
@@ -76,15 +84,13 @@ const Sidebar: React.FC<SidebarProps> = ({
       disabled: true,
       href: "",
     },
-    {
-      href: "/logout",
-      text: "Logout",
-      icon: <FiLogOut />,
-    },
   ];
 
   return (
-    <aside className={isDrawer ? "sidebar w-full bg-white h-full " : "sidebar fixed"}>
+    <aside
+      className={isDrawer ? "sidebar w-full bg-white h-full" : "sidebar fixed"}
+    >
+      {/* Logo */}
       <div className="sidebar__logo flex items-center">
         <img
           src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogo.1b1c490b.png&w=640&q=75"
@@ -92,29 +98,33 @@ const Sidebar: React.FC<SidebarProps> = ({
           style={{ objectFit: "contain" }}
         />
       </div>
+
+      {/* Sidebar Links */}
       <div className="sidebar__wrapper">
+        {/* Top Links */}
         <div className="sidebar__top">
           {menuLinksTop.map((item, i) => (
             <SidebarLink key={i} {...item} />
           ))}
-          {isPlayerPage && setActiveSize && (
+
+          {isPlayerPage && (
             <div className="flex gap-4 items-end justify-start pl-5">
-             {Object.entries(fontSizes).map(([sizeKey, f]) => (
+              {Object.entries(fontSizes).map(([sizeKey, f]) => (
                 <button
-              key={sizeKey}
-    onClick={() => setActiveSize(sizeKey as keyof typeof fontSizes)}
+                  key={sizeKey}
+                  onClick={() =>
+                    setActiveSize(sizeKey as keyof typeof fontSizes)
+                  }
                   className="flex flex-col items-center focus:outline-none"
                   type="button"
                 >
                   <span
-                    className={`
-                      font-sans font-semibold transition-all
-                      ${activeSize === sizeKey ? "text-[#032b41]" : "text-[#6b7280]"}
-                    `}
-                    style={{
-                      fontSize: f.px,
-                      letterSpacing: 1.1,
-                    }}
+                    className={`font-sans font-semibold transition-all ${
+                      activeSize === sizeKey
+                        ? "text-[#032b41]"
+                        : "text-[#6b7280]"
+                    }`}
+                    style={{ fontSize: f.px, letterSpacing: 1.1 }}
                   >
                     {f.label}
                   </span>
@@ -126,15 +136,37 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
-        <div className={`sidebar__bottom ${isPlayerPage ? " pb-[72px] max-[767px]:pb-[220px]" : ""}`}>
+
+        {/* Bottom Links */}
+        <div
+          className={`sidebar__bottom ${
+            isPlayerPage ? "pb-[72px] max-[767px]:pb-[220px]" : ""
+          }`}
+        >
           {menuLinksBottom.map((item, i) => (
             <SidebarLink key={i} {...item} />
           ))}
+
+          {/* Conditional Login / Logout */}
+          {currentUser ? (
+            <SidebarLink
+              text="Logout"
+              icon={<FiLogOut />}
+              href=""
+              onClick={onLogoutClick}
+            />
+          ) : (
+            <SidebarLink
+              text="Login"
+              icon={<FiLogIn />}
+              href=""
+              onClick={onLoginClick}
+            />
+          )}
         </div>
       </div>
     </aside>
   );
 };
-
 
 export default Sidebar;

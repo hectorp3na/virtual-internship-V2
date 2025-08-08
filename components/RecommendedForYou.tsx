@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { ClockIcon, StarIcon } from "@heroicons/react/24/outline";
+import Link from "next/link";
 
 type Book = {
   id: string;
@@ -72,7 +73,7 @@ export default function RecommendedForYou() {
 ) : (
   <div className="flex overflow-x-auto gap-4 scroll-snap-x scroll-snap-mandatory mb-8">
     {books.map((book) => (
-      <a
+      <Link
         key={book.id}
         href={`/book/${book.id}`}
         className="flex-none w-56 bg-white rounded-lg shadow-sm border-0 p-3 relative transition-all duration-200 hover:-translate-y-1 hover:shadow-lg hover:scale-[1.025] hover:bg-gray-100"
@@ -82,7 +83,7 @@ export default function RecommendedForYou() {
             Premium
           </div>
         )}
-        <figure className="w-full h-40 mb-3">
+        <figure className="h-40 mb-3">
           <img
             className="w-full h-full object-cover rounded"
             src={book.imageLink || book.img}
@@ -106,7 +107,7 @@ export default function RecommendedForYou() {
             </span>
           </div>
         </div>
-      </a>
+      </Link>
     ))}
   </div>
 )}

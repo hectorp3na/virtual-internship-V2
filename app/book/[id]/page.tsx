@@ -44,8 +44,19 @@ export default function BookPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeSize, setActiveSize] = useState<"small" | "medium" | "large" | "xlarge">("small");
+  const [activeSize, setActiveSize] = useState<
+    "small" | "medium" | "large" | "xlarge"
+  >("small");
+  const handleLoginClick = () => {
+    openAuth();
+  };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  const currentUser = user;
 
   const handleReadOrListen = (type: "read" | "listen") => {
     if (!user) {
@@ -56,7 +67,7 @@ export default function BookPage() {
       router.push("/choose-plan");
       return;
     }
-    
+
     router.push(`/player/${book!.id}`);
   };
 
@@ -91,7 +102,13 @@ export default function BookPage() {
     <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
       <aside className="hidden md:block bg-white">
-        <Sidebar activeSize={activeSize} setActiveSize={setActiveSize} />
+        <Sidebar
+          activeSize={activeSize}
+          setActiveSize={setActiveSize}
+          onLogoutClick={handleLogout}
+          onLoginClick={handleLoginClick}
+          currentUser={currentUser}
+        />
       </aside>
       {/* Mobile Sidebar Drawer */}
       {sidebarOpen && (
@@ -104,7 +121,14 @@ export default function BookPage() {
             className="relative z-50 h-full w-[375px] max-w-full bg-[#f6f7fb] flex flex-col shadow-2xl animate-slide-in-left"
             style={{ minWidth: 320 }}
           >
-            <Sidebar activeSize={activeSize} setActiveSize={setActiveSize} isDrawer />
+            <Sidebar
+              isDrawer
+              activeSize={activeSize}
+              setActiveSize={setActiveSize}
+              onLogoutClick={handleLogout}
+              onLoginClick={handleLoginClick}
+              currentUser={currentUser}
+            />
           </aside>
         </div>
       )}

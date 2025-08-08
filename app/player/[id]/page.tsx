@@ -1,9 +1,14 @@
 "use client";
-import { useEffect, useState, Dispatch, SetStateAction } from "react";
+
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { auth } from "../../../firebase";
+import { signOut } from "firebase/auth";
+import { useAuth } from "@/hooks/useAuth";
 import Sidebar from "../../../components/Sidebar";
 import SearchBar from "../../../components/SearchBar";
 import AudioPlayer from "components/AudioPlayer";
+import LoginModal from "../../../components/LoginModal";
 
 const fontSizes = {
   small: 16,
@@ -21,16 +26,29 @@ type Book = {
   imageLink?: string;
 };
 
-
 export default function PlayerPage() {
   const params = useParams();
   const id = params.id as string | undefined;
 
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fontSizeKey, setFontSizeKey] =
-    useState<keyof typeof fontSizes>("small");
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [fontSizeKey, setFontSizeKey] = useState<keyof typeof fontSizes>("small");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const { user: currentUser } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
+  const handleLoginClick = () => {
+    setIsLoginModalOpen(true);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -54,15 +72,21 @@ export default function PlayerPage() {
     <div className="flex min-h-screen bg-white">
       {/* Sidebar */}
       <aside className="hidden md:block bg-white">
-        <Sidebar activeSize={fontSizeKey} setActiveSize={setFontSizeKey} />
+        <Sidebar
+          activeSize={fontSizeKey}
+          setActiveSize={setFontSizeKey}
+          onLogoutClick={handleLogout}
+          onLoginClick={handleLoginClick}
+          currentUser={currentUser}
+        />
       </aside>
-        {/* Mobile Sidebar Drawer */}
+
+      {/* Mobile Sidebar Drawer */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex">
           <div
             className="fixed inset-0 bg-transparent bg-opacity-40 transition-opacity"
             onClick={() => setSidebarOpen(false)}
-            
           />
           <aside
             className="relative z-50 h-full w-[375px] max-w-full bg-[#f6f7fb] flex flex-col shadow-2xl animate-slide-in-left"
@@ -72,16 +96,25 @@ export default function PlayerPage() {
               activeSize={fontSizeKey}
               setActiveSize={setFontSizeKey}
               isDrawer
+              onLogoutClick={handleLogout}
+              onLoginClick={handleLoginClick}
+              currentUser={currentUser}
             />
           </aside>
         </div>
       )}
+
+      {/* Login Modal */}
+      {isLoginModalOpen && (
+        <LoginModal onClose={() => setIsLoginModalOpen(false)} />
+      )}
+
       {/* Main Content */}
       <main className="flex-1 px-8 pt-6 pb-[200px] ml-0 md:ml-[200px] overflow-y-auto">
         <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
           <div className="flex items-center gap-2">
-        <SearchBar />
-          {/* Burger menu for mobile */}
+            <SearchBar />
+            {/* Burger menu for mobile */}
             <button
               className="block md:hidden ml-3 p-2 mb-6"
               onClick={() => setSidebarOpen(true)}
@@ -100,6 +133,7 @@ export default function PlayerPage() {
             </button>
           </div>
         </div>
+
         <div className="max-w-3xl mx-auto">
           {loading ? (
             <div>

@@ -55,7 +55,7 @@ export default function PlanFAQ() {
           >
             <button
               onClick={() => toggle(idx)}
-              className="relative w-full text-left cursor-pointer text-[20px] md:text-[24px] font-medium text-[#032b41] pr-8"
+              className="relative w-full text-left cursor-pointer text-[20px] md:text-[24px] font-bold text-[#032b41] pr-8"
             >
               {faq.question}
               <svg
