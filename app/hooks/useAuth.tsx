@@ -7,79 +7,120 @@ import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  getAuth,
+  User as FirebaseUser,
 } from "firebase/auth";
-import { auth, initFirebase } from "../../firebase";
-import { useRouter } from 'next/navigation';
 
 
-interface AuthContextType {
-  user: any;
+import { auth } from "../../firebase";
+import { useRouter } from "next/navigation";
+
+type AuthContextType = {
+  user: FirebaseUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   loginAsGuest: () => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-}
+};
 
-const AuthContext = createContext<AuthContextType | null>(null);
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const auth = getAuth();
-  const provider = new GoogleAuthProvider();
-
- initFirebase();
+  const googleProvider = new GoogleAuthProvider();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
       setLoading(false);
     });
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
+
+  const friendlyThrow = (code?: string, fallback = "Request failed. Please try again.") => {
+    switch (code) {
+      case "auth/invalid-credential":
+      case "auth/wrong-password":
+      case "auth/user-not-found":
+        throw new Error("Invalid email or password.");
+      case "auth/invalid-email":
+        throw new Error("Please enter a valid email address.");
+      case "auth/too-many-requests":
+        throw new Error("Too many attempts. Try again later.");
+      case "auth/popup-closed-by-user":
+        throw new Error("Sign-in was canceled.");
+      default:
+        throw new Error(fallback);
+    }
+  };
 
   /** Login with email/password */
   const login = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+    } catch (err: any) {
+      console.error("Login error:", err?.code, err?.message);
+      friendlyThrow(err?.code, "Login failed. Please try again.");
+    }
   };
 
   /** Register with email/password */
   const register = async (email: string, password: string) => {
-    await createUserWithEmailAndPassword(auth, email, password);
+    try {
+      await createUserWithEmailAndPassword(auth, email.trim(), password);
+    } catch (err: any) {
+      console.error("Register error:", err?.code, err?.message);
+      friendlyThrow(err?.code, "Registration failed. Please try again.");
+    }
   };
 
-  /** Guest login */
+  /** Guest login (ensure this user exists in the SAME Firebase project) */
   const loginAsGuest = async () => {
-    const guestEmail = "guest@example.com";
-    const guestPassword = "guest123";
-    await signInWithEmailAndPassword(auth, guestEmail, guestPassword);
+    try {
+      const guestEmail = "guest@example.com";
+      const guestPassword = "guest123";
+      await signInWithEmailAndPassword(auth, guestEmail, guestPassword);
+    } catch (err: any) {
+      console.error("Guest login error:", err?.code, err?.message);
+      friendlyThrow(err?.code, "Guest login failed. Please try again.");
+    }
   };
 
+  /** Google login */
   const loginWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err: any) {
+      console.error("Google login error:", err?.code, err?.message);
+      friendlyThrow(err?.code, "Google login failed. Please try again.");
+    }
   };
 
   /** Logout */
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+      router.push("/"); // optional
+    } catch (err: any) {
+      console.error("Logout error:", err?.code, err?.message);
+      friendlyThrow(err?.code, "Logout failed. Please try again.");
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, loginAsGuest, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, register, loginAsGuest, loginWithGoogle, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-   const context = useContext(AuthContext) as AuthContextType;
-  return {
-    ...context,
-    currentUser: context.user, 
-  };
+export const useAuth = (): AuthContextType => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+  return ctx;
 };

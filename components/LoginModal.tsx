@@ -3,36 +3,48 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
+
 interface LoginModalProps {
   onClose: () => void;
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
   const router = useRouter();
-  const { login, register, loginAsGuest, logout } = useAuth();
+  const {
+    login,
+    register,
+    loginAsGuest,
+    loginWithGoogle,
+    logout,
+  } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+
+  const finish = () => {
+    onClose();
+
+  };
 
   /** Guest Login */
   const handleGuestLogin = async () => {
     try {
       await loginAsGuest();
-      onClose();
-      router.push("/for-you");
+      setError("");
+      finish(); 
     } catch (error) {
       console.error("Guest login failed:", error);
       setError("Guest login failed. Try again.");
     }
   };
 
-  const { loginWithGoogle } = useAuth();
 
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
-      router.push("/for-you");
-      onClose();
+      setError("");
+      finish();
     } catch (err: any) {
       console.error("Google login error:", err);
       setError("Google login failed. Please try again.");
@@ -44,14 +56,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
     try {
       await login(email, password);
       setError("");
-      onClose();
-      router.push("/for-you");
+      finish();
     } catch (err: any) {
       console.error("Login error:", err);
       if (err.code === "auth/invalid-email") setError("Invalid email address.");
       else if (err.code === "auth/user-not-found") setError("User not found.");
-      else if (err.code === "auth/wrong-password")
-        setError("Incorrect password.");
+      else if (err.code === "auth/wrong-password") setError("Incorrect password.");
       else setError("Login failed. Please try again.");
     }
   };
@@ -61,8 +71,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
     try {
       await register(email, password);
       setError("");
-      onClose();
-      router.push("/for-you");
+      finish(); 
     } catch (err: any) {
       console.error("Registration error:", err);
       if (err.code === "auth/invalid-email") setError("Invalid email address.");
@@ -72,10 +81,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
     }
   };
 
-  /** Logout (if needed elsewhere) */
   const handleLogout = async () => {
     await logout();
-    router.push("/");
+  
   };
 
   return (
@@ -117,17 +125,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
               <span className="auth__separator--text">or</span>
             </div>
 
-              <button
-                type="button"
-                className="btn google__btn--wrapper"
-                onClick={handleGoogleLogin}
-              >
-                <figure className="google__icon--mask">
-                  <img alt="google" src="./google.png" />
-                </figure>
-                <div>Login with Google</div>
-              </button>
-              {/* Separator */}
+            <button
+              type="button"
+              className="btn google__btn--wrapper"
+              onClick={handleGoogleLogin}
+            >
+              <figure className="google__icon--mask">
+                <img alt="google" src="/google.png" />
+              </figure>
+              <div>Login with Google</div>
+            </button>
+
+            {/* Separator */}
             <div className="auth__separator">
               <span className="auth__separator--text">or</span>
             </div>
@@ -155,12 +164,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
               <button type="button" className="btn" onClick={handleLogin}>
                 <span>Login</span>
               </button>
+
+              {/* If you expose registration here, wire this button to handleRegister */}
+              {/* <button type="button" className="btn" onClick={handleRegister}>
+                <span>Create account</span>
+              </button> */}
             </div>
           </div>
-                    {/* Bottom Section */}
-          <div className="auth__forgot--password">
-            Forgot your password?
-          </div>
+
+          {/* Bottom Section */}
+          <div className="auth__forgot--password">Forgot your password?</div>
           <button type="button" className="auth__switch--btn">
             Don't have an account?
           </button>
