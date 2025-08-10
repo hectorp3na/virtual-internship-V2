@@ -1,4 +1,4 @@
-// functions/src/index.ts
+
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import Stripe from "stripe";
@@ -15,7 +15,7 @@ const stripe = new Stripe(functions.config().stripe.secret, {
   // apiVersion: "2024-06-20",
 });
 
-/** Typed request so we don't need @ts-ignore for rawBody. */
+
 type RawReq = functions.https.Request & { rawBody: Buffer };
 
 export const createCheckoutSession = functions.https.onCall(
@@ -112,7 +112,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
           subscriptionId
         )) as unknown as Stripe.Subscription;
 
-        // SAFELY read current_period_end
+
         const periodEnd =
             (sub as unknown as { current_period_end?: number | null })
               .current_period_end;
@@ -121,7 +121,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
         const price = firstItem?.price;
         plan = (price?.nickname || price?.id) ?? "premium";
 
-        // Save uid on customer for future events.
+    
         if (session.customer) {
           try {
             await stripe.customers.update(session.customer as string, {
@@ -175,7 +175,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
     case "customer.subscription.paused": {
       const sub = event.data.object as Stripe.Subscription;
 
-      // SAFELY read current_period_end
+
       const periodEnd =
           (sub as unknown as { current_period_end?: number | null })
             .current_period_end;
@@ -193,7 +193,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
                 undefined;
         }
       } catch {
-        // ignore lookup errors
+       
       }
       if (!uid) break;
 
@@ -223,7 +223,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
     }
 
     default:
-      // ignore other events
+     
       break;
     }
 
