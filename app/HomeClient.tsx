@@ -1,24 +1,21 @@
 "use client";
 import Footer from "../components/Footer";
 import Nav from "../components/Nav";
-import LoginModal from "../components/LoginModal";
 import { AiFillAudio, AiFillBulb, AiFillFileText } from "react-icons/ai";
 import { BiCrown } from "react-icons/bi";
 import { BsStarFill, BsStarHalf } from "react-icons/bs";
 import { RiLeafLine } from "react-icons/ri";
 import { useAuthModal } from "../contexts/AuthModalContext";
-import { AuthModalProvider } from "../contexts/AuthModalContext";
-import { useAuth } from "./hooks/useAuth";
 
 export default function HomeClient() {
-  const { openAuth } = useAuthModal();
+   const { openLogin } = useAuthModal();
 
   return (
     <>
       <div id="__next">
         <div className="wrapper wrapper__full">
           <div className="sidebar__overlay sidebar__overlay--hidden">
-            <Nav onLoginClick={openAuth} />
+            <Nav onLoginClick={openLogin} />
             {/* LANDING SECTION */}
             <section id="landing">
               <div className="container">
@@ -38,7 +35,7 @@ export default function HomeClient() {
                       </div>
                       <button
                         className="btn home__cta--btn"
-                        onClick={openAuth}
+                        onClick={openLogin}
                       >
                         Login
                       </button>
@@ -270,7 +267,7 @@ export default function HomeClient() {
                   <div className="reviews__btn--wrapper">
                     <button
                       className="btn home__cta--btn"
-                      onClick={openAuth}
+                      onClick={openLogin}
                     >
                       Login
                     </button>
