@@ -6,9 +6,10 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface LoginModalProps {
   onClose: () => void;
+  onOpenSignup: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
+const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
   const router = useRouter();
   const {
     login,
@@ -175,7 +176,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
 
           {/* Bottom Section */}
           <div className="auth__forgot--password">Forgot your password?</div>
-          <button type="button" className="auth__switch--btn">
+          <button type="button" className="auth__switch--btn" 
+          onClick={onOpenSignup}>
             Don't have an account?
           </button>
 

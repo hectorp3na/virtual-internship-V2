@@ -8,7 +8,7 @@ admin.initializeApp();
 /**
  * Set with:
  *   firebase functions:config:set \
- *   stripe.secret="sk_test_..." \
+ * 
  *   stripe.webhook_secret="whsec_..."
  */
 const stripe = new Stripe(functions.config().stripe.secret, {

@@ -1,29 +1,34 @@
-"use client"
-import React, { createContext, useContext, useState } from "react";
+"use client";
 
-const AuthModalContext = createContext<{
+import { createContext, useContext, useState } from "react";
+
+type Mode = "login" | "signup";
+type Ctx = {
   showAuth: boolean;
-  openAuth: () => void;
+  mode: Mode;
+  openLogin: () => void;
+  openSignup: () => void;
   closeAuth: () => void;
-}>({
-  showAuth: false,
-  openAuth: () => {},
-  closeAuth: () => {},
-});
+};
 
-export function useAuthModal() {
-  return useContext(AuthModalContext);
-}
+const AuthModalCtx = createContext<Ctx | null>(null);
 
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const [showAuth, setShowAuth] = useState(false);
-
-  const openAuth = () => setShowAuth(true);
+  const [mode, setMode] = useState<Mode>("login");
+  const openLogin = () => { setMode("login"); setShowAuth(true); };
+  const openSignup = () => { setMode("signup"); setShowAuth(true); };
   const closeAuth = () => setShowAuth(false);
 
   return (
-    <AuthModalContext.Provider value={{ showAuth, openAuth, closeAuth }}>
+    <AuthModalCtx.Provider value={{ showAuth, mode, openLogin, openSignup, closeAuth }}>
       {children}
-    </AuthModalContext.Provider>
+    </AuthModalCtx.Provider>
   );
 }
+
+export const useAuthModal = () => {
+  const ctx = useContext(AuthModalCtx);
+  if (!ctx) throw new Error("useAuthModal must be used within AuthModalProvider");
+  return ctx;
+};
