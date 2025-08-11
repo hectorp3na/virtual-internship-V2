@@ -2,11 +2,12 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { usePathname, useSearchParams } from "next/navigation";
 
 
 interface LoginModalProps {
   onClose: () => void;
-  onOpenSignup: () => void;
+  onOpenSignup?: () => void;
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
@@ -167,17 +168,16 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
                 <span>Login</span>
               </button>
 
-              {/* If you expose registration here, wire this button to handleRegister */}
-              {/* <button type="button" className="btn" onClick={handleRegister}>
+              <button type="button" className="btn" onClick={handleRegister}>
                 <span>Create account</span>
-              </button> */}
+              </button>
             </div>
           </div>
 
           {/* Bottom Section */}
           <div className="auth__forgot--password">Forgot your password?</div>
           <button type="button" className="auth__switch--btn" 
-          onClick={onOpenSignup}>
+          onClick={() => onOpenSignup?.()}>
             Don't have an account?
           </button>
 
