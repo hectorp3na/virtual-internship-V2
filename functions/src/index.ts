@@ -66,10 +66,7 @@ export const createCheckoutSession = functions.https.onCall(
   }
 );
 
-/**
- * Webhook to sync Stripe -> Firestore.
- * Add this endpoint in Stripe Dashboard (Developers > Webhooks).
- */
+
 export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST") {
     res.status(405).send("Method Not Allowed");
@@ -186,7 +183,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
       try {
         const customerObj = await stripe.customers.retrieve(customerId);
         if (!customerObj.deleted) {
-          const cust = customerObj as Stripe.Customer; // narrow the type
+          const cust = customerObj as Stripe.Customer;
           uid =
               typeof cust.metadata?.firebaseUID === "string" ?
                 cust.metadata.firebaseUID :

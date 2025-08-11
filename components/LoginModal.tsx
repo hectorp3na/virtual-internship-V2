@@ -24,6 +24,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
 
   const finish = () => {
     onClose();
+    router.push("/for-you")
 
   };
 
