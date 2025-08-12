@@ -5,18 +5,50 @@ import Stripe from "stripe";
 
 admin.initializeApp();
 
-/**
- * Set with:
- *   firebase functions:config:set \
- * 
- *   stripe.webhook_secret="whsec_..."
- */
-const stripe = new Stripe(functions.config().stripe.secret, {
-  // apiVersion: "2024-06-20",
-});
+function getStripe(): Stripe {
+  const secret = functions.config().stripe?.secret as string | undefined;
+  if (!secret) {
+    functions.logger.error("Missing stripe.secret in functions config");
+    throw new Error("Missing stripe.secret");
+  }
+  
+  const g = globalThis as any;
+  if (!g.__STRIPE__) {
+    g.__STRIPE__ = new (Stripe as unknown as typeof Stripe)(secret, {
+      // apiVersion: "2024-06-20",
+    });
+  }
+  return g.__STRIPE__ as Stripe;
+}
 
 
 type RawReq = functions.https.Request & { rawBody: Buffer };
+
+/**
+ * Get or create a Stripe customer for a Firebase user.
+ * @param {string} uid
+ * @param {string=} email
+ * @return {Promise<string>}
+ */
+async function getOrCreateCustomer(uid: string, email?: string) {
+  const ref = admin.firestore().collection("users").doc(uid);
+  const snap = await ref.get();
+  const existing = snap.get("stripeCustomerId") as string | undefined;
+  if (existing) return existing;
+
+  const customer = await getStripe().customers.create({
+    email,
+    metadata: {firebaseUID: uid},
+  });
+  await ref.set({stripeCustomerId: customer.id}, {merge: true});
+  return customer.id;
+}
+
+/**
+ * Create a Checkout Session for a subscription.
+ * @param {{priceId: string}} request.data Stripe price id.
+ * @return {{sessionId: string, url: string}} Session identifiers.
+ */
 
 export const createCheckoutSession = functions.https.onCall(
   async (request: functions.https.CallableRequest<{ priceId: string }>) => {
@@ -44,13 +76,19 @@ export const createCheckoutSession = functions.https.onCall(
     const cancelUrl = `${baseUrl}/for-you?checkout=canceled`;
 
     try {
-      const session = await stripe.checkout.sessions.create({
+      const customerId = await getOrCreateCustomer(uid, email);
+
+      const session = await getStripe().checkout.sessions.create({
         mode: "subscription",
         line_items: [{price: priceId, quantity: 1}],
-        customer_email: email,
+
+        customer: customerId,
         metadata: {
           firebaseUID: uid,
           selectedPriceId: priceId,
+        },
+        subscription_data: {
+          metadata: {firebaseUID: uid},
         },
         success_url: successUrl,
         cancel_url: cancelUrl,
@@ -66,6 +104,11 @@ export const createCheckoutSession = functions.https.onCall(
   }
 );
 
+/**
+ * Verify Stripe webhook signature and mirror subscription to Firestore.
+ * @param {functions.https.Request} req
+ * @param {functions.Response} res
+ */
 
 export const stripeWebhook = functions.https.onRequest(async (req, res) => {
   if (req.method !== "POST") {
@@ -85,7 +128,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
   try {
     const rawReq = req as RawReq;
-    event = stripe.webhooks.constructEvent(rawReq.rawBody, sig, webhookSecret);
+    event = getStripe().webhooks.constructEvent(rawReq.rawBody, sig, webhookSecret);
   } catch (err: unknown) {
     const e = err as Error;
     console.error("Bad signature:", e.message);
@@ -105,23 +148,21 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
       let plan = "premium";
 
       if (subscriptionId) {
-        const sub = (await stripe.subscriptions.retrieve(
+        const sub = (await getStripe().subscriptions.retrieve(
           subscriptionId
         )) as unknown as Stripe.Subscription;
 
-
-        const periodEnd =
-            (sub as unknown as { current_period_end?: number | null })
-              .current_period_end;
+        const periodEnd = (
+            sub as unknown as { current_period_end?: number | null }
+        ).current_period_end;
 
         const firstItem = sub.items?.data?.[0];
         const price = firstItem?.price;
         plan = (price?.nickname || price?.id) ?? "premium";
 
-    
         if (session.customer) {
           try {
-            await stripe.customers.update(session.customer as string, {
+            await getStripe().customers.update(session.customer as string, {
               metadata: {firebaseUID: uid},
             });
           } catch (e) {
@@ -129,14 +170,22 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
           }
         }
 
+        const status = sub.status;
+        const isActive = status === "active" || status === "trialing";
+        const priceId = price?.id ?? null;
+        const productId = (price?.product as string) ?? null;
+
         await admin
           .firestore()
           .collection("users")
           .doc(uid)
           .set(
             {
-              subscriptionStatus: "premium",
-              subscriptionPlan: plan,
+              role: isActive ? "premium" : "free",
+              subscriptionStatus: status,
+              subscriptionPlan: price?.nickname ?? priceId,
+              priceId,
+              productId,
               stripeCustomerId: (session.customer as string) ?? null,
               stripeSubscriptionId: subscriptionId,
               currentPeriodEnd: periodEnd ?
@@ -172,16 +221,15 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
     case "customer.subscription.paused": {
       const sub = event.data.object as Stripe.Subscription;
 
-
-      const periodEnd =
-          (sub as unknown as { current_period_end?: number | null })
-            .current_period_end;
+      const periodEnd = (
+          sub as unknown as { current_period_end?: number | null }
+      ).current_period_end;
 
       const customerId = sub.customer as string;
 
       let uid: string | undefined;
       try {
-        const customerObj = await stripe.customers.retrieve(customerId);
+        const customerObj = await getStripe().customers.retrieve(customerId);
         if (!customerObj.deleted) {
           const cust = customerObj as Stripe.Customer;
           uid =
@@ -189,11 +237,10 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
                 cust.metadata.firebaseUID :
                 undefined;
         }
-      } catch {
-       
+      } catch (e) {
+        functions.logger.warn("Retrieve customer failed", e as Error);
       }
       if (!uid) break;
-
       const isActive = sub.status === "active" || sub.status === "trialing";
 
       const firstItem = sub.items?.data?.[0];
@@ -206,7 +253,8 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
         .doc(uid)
         .set(
           {
-            subscriptionStatus: isActive ? "premium" : "free",
+            role: isActive ? "premium" : "free",
+            subscriptionStatus: sub.status,
             subscriptionPlan: plan,
             currentPeriodEnd: periodEnd ?
               admin.firestore.Timestamp.fromMillis(periodEnd * 1000) :
@@ -220,7 +268,7 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
     }
 
     default:
-     
+      
       break;
     }
 
