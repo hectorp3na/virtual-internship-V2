@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth } from "firebase/auth";
-import { getFunctions, httpsCallable } from "firebase/functions";
 
 import { app } from "../../firebase";
 import Footer from "components/Footer";
@@ -11,17 +10,16 @@ import PlanHeader from "../../components/PlanHeader";
 import PlanFeatures from "../../components/PlanFeatures";
 import PlanFAQs from "../../components/PlanFAQs";
 
-const FUNCTIONS_REGION = "us-central1";
-const FUNCTION_NAME = "createCheckoutSessionV2";
-
+const FUNCTION_URL =
+  "https://us-central1-virtual-internship-v2-dd1e4.cloudfunctions.net/createCheckoutSessionV2";
 
 const monthlyPriceId = "price_1RtNU9LaXqGfXK4JikVfj19M";
-const yearlyPriceId  = "price_1RtNT9LaXqGfXK4JpjOyFOQA";
+const yearlyPriceId = "price_1RtNT9LaXqGfXK4JpjOyFOQA";
 
 export default function ChoosePlanPage() {
   const router = useRouter();
 
-  const [isVisible,] = useState(false);
+  const [isVisible] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<"yearly" | "monthly">("yearly");
   const [submitting, setSubmitting] = useState(false);
 
@@ -39,17 +37,28 @@ export default function ChoosePlanPage() {
     try {
       setSubmitting(true);
 
-      const functions = getFunctions(app, FUNCTIONS_REGION);
-      const createCheckoutSession = httpsCallable<
-        { priceId: string },
-        { url?: string; sessionId: string }
-      >(functions, FUNCTION_NAME);
+      const idToken = await user.getIdToken();
 
-      const { data } = await createCheckoutSession({ priceId: selectedPriceId });
+      const resp = await fetch(FUNCTION_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ priceId: selectedPriceId }),
+      });
+
+      if (!resp.ok) {
+        const errText = await resp.text().catch(() => "");
+        throw new Error(`Checkout HTTP ${resp.status} ${errText}`);
+      }
+
+      const data: { url?: string; sessionId?: string; error?: string } = await resp.json();
 
       if (!data?.url) {
-        throw new Error("No Checkout URL returned");
+        throw new Error(data?.error || "No Checkout URL returned");
       }
+
 
       window.location.href = data.url;
     } catch (error) {

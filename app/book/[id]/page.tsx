@@ -331,6 +331,8 @@ const handleLogout = async () => {
                   <Image 
                     src={book.imageLink || book.img || "/fallback.jpg"}
                     alt={book.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, 420px"
                     className="w-full object-cover rounded-md"
                   />
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-24 rounded-b-[48%] bg-[#e06e6e] -z-10"></div>
