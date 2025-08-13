@@ -2,7 +2,6 @@
 
 import Footer from "components/Footer";
 import Image from "next/image";
-import Link from "next/link";
 
 export default function ChoosePlanPage() {
     return (
@@ -16,7 +15,7 @@ export default function ChoosePlanPage() {
         <p className="mt-3 text-base md:text-lg">
           Turn ordinary moments into amazing learning opportunities
         </p>
-        <img
+        <Image
           src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fpricing-top.4d86e93a.png&w=1080&q=75"
           alt="Illustration"
           className="w-full h-full max-w-md mx-auto mt-10"
@@ -85,7 +84,7 @@ export default function ChoosePlanPage() {
           While an annual plan is active, it is not feasible to switch to a monthly plan...
         </p>
 
-        <h3 className="text-lg font-bold mb-2">What's included in the Premium plan?</h3>
+        <h3 className="text-lg font-bold mb-2">What{'\''}s included in the Premium plan?</h3>
         <p className="text-sm mb-6">
           Premium membership provides unrestricted access to best-selling books, high-quality audio, offline reading, and Kindle export.
         </p>

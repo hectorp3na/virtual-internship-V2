@@ -27,6 +27,7 @@ type SidebarProps = {
   isDrawer?: boolean;
   onLogoutClick?: () => void;
   onLoginClick?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   currentUser: any;
 };
 

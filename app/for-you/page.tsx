@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useAuth } from "@/hooks/useAuth"; 
@@ -11,13 +11,34 @@ import SelectedForYou from "../../components/SelectedForYou";
 import RecommendedForYou from "../../components/RecommendedForYou";
 import SuggestedBooks from "../../components/SuggestedBooks";
 import LoginModal from "../../components/LoginModal"; 
+import SignUpModal from "../../components/SignUpModal";
+
+
+function useAuthModals() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+
+  const openLogin = () => { setIsSignUpModalOpen(false); setIsLoginModalOpen(true); };
+  const openSignup = () => { setIsLoginModalOpen(false); setIsSignUpModalOpen(true); };
+  const closeLogin = () => setIsLoginModalOpen(false);
+  const closeSignup = () => setIsSignUpModalOpen(false);
+
+  return { isLoginModalOpen, isSignUpModalOpen, openLogin, openSignup, closeLogin, closeSignup };
+}
 
 export default function ForYouPage() {
-  const router = useRouter();
-  const { user: currentUser } = useAuth(); 
+  const { user: currentUser } = useAuth();
   const [activeSize, setActiveSize] = useState<"small" | "medium" | "large" | "xlarge">("small");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+ const {
+    isLoginModalOpen,
+    isSignUpModalOpen,
+    openLogin,
+    openSignup,
+    closeLogin,
+    closeSignup,
+  } = useAuthModals();
 
   const handleLogout = async () => {
     try {
@@ -27,9 +48,7 @@ export default function ForYouPage() {
     }
   };
 
-  const handleLoginClick = () => {
-    setIsLoginModalOpen(true);
-  };
+  
 
   return (
     <div className="flex min-h-screen">
@@ -39,7 +58,7 @@ export default function ForYouPage() {
           activeSize={activeSize}
           setActiveSize={setActiveSize}
           onLogoutClick={handleLogout}
-          onLoginClick={handleLoginClick}
+          onLoginClick={openLogin}
           currentUser={currentUser}
         />
       </aside>
@@ -53,18 +72,25 @@ export default function ForYouPage() {
             style={{ minWidth: 320 }}
           >
             <Sidebar
-              activeSize={activeSize}
-              setActiveSize={setActiveSize}
+              isDrawer
+              activeSize={activeSize}        
+              setActiveSize={setActiveSize}      
               onLogoutClick={handleLogout}
-              onLoginClick={handleLoginClick}
+              onLoginClick={openLogin}
               currentUser={currentUser}
             />
           </aside>
         </div>
       )}
 
-      {/* Login Modal */}
-      {isLoginModalOpen && <LoginModal onClose={() => setIsLoginModalOpen(false)} />}
+           {/* Auth Modals */}
+      {isLoginModalOpen && (
+        <LoginModal onClose={closeLogin} onOpenSignup={openSignup} />
+      )}
+      {isSignUpModalOpen && (
+        <SignUpModal onClose={closeSignup} onOpenLogin={openLogin} />
+      )}
+
 
       {/* Main Content */}
       <main className="flex-1 py-6 px-4 ml-0 md:ml-[200px] overflow-y-auto">
@@ -82,6 +108,7 @@ export default function ForYouPage() {
             </button>
           </div>
         </div>
+
         <div className="mt-10">
           <SelectedForYou />
         </div>

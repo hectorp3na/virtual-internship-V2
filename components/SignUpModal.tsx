@@ -23,7 +23,9 @@ export default function SignUpModal({ onClose, onOpenLogin }: Props) {
       await loginWithGoogle();
       onClose();
       router.push("/for-you");
-    } catch (e: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (e: any) {
       setError(e?.message || "Google sign up failed.");
     } finally {
       setLoading(false);
@@ -38,7 +40,9 @@ export default function SignUpModal({ onClose, onOpenLogin }: Props) {
       await register(email.trim(), password);
       onClose();
       router.push("/for-you");
-    } catch (e: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (e: any) {
       setError(e?.message || "Sign up failed.");
     } finally {
       setLoading(false);

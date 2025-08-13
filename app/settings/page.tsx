@@ -9,23 +9,35 @@ import Sidebar from "../../components/Sidebar";
 import SearchBar from "../../components/SearchBar";
 import LoginModal from "../../components/LoginModal";
 import SignUpModal from "../../components/SignUpModal";
+import Image from "next/image";
 
 export default function SettingsPage() {
   const { user: currentUser } = useAuth();
-  const { loading, isPremium, planName } = useSubscription(currentUser?.uid ?? null);
+  const { loading, isPremium, planName } = useSubscription(
+    currentUser?.uid ?? null
+  );
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
 
-  const openLogin = () => { setIsSignUpModalOpen(false); setIsLoginModalOpen(true); };
-  const openSignup = () => { setIsLoginModalOpen(false); setIsSignUpModalOpen(true); };
+  const openLogin = () => {
+    setIsSignUpModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+  const openSignup = () => {
+    setIsLoginModalOpen(false);
+    setIsSignUpModalOpen(true);
+  };
   const closeLogin = () => setIsLoginModalOpen(false);
   const closeSignup = () => setIsSignUpModalOpen(false);
 
   const handleLogout = async () => {
-    try { await signOut(auth); } catch (e) { console.error("Logout error:", e); }
-  
+    try {
+      await signOut(auth);
+    } catch (e) {
+      console.error("Logout error:", e);
+    }
   };
 
   return (
@@ -36,7 +48,7 @@ export default function SettingsPage() {
           activeSize={"small"}
           setActiveSize={() => {}}
           onLogoutClick={handleLogout}
-          onLoginClick={openLogin}  
+          onLoginClick={openLogin}
           currentUser={currentUser}
         />
       </aside>
@@ -44,15 +56,20 @@ export default function SettingsPage() {
       {/* Mobile Sidebar Drawer */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 flex">
-          <div className="fixed inset-0 bg-transparent bg-opacity-40" onClick={() => setSidebarOpen(false)} />
-          <aside className="relative z-50 h-full w-[375px] max-w-full bg-[#f6f7fb] flex flex-col shadow-2xl"
-                 style={{ minWidth: 320 }}>
+          <div
+            className="fixed inset-0 bg-transparent bg-opacity-40"
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside
+            className="relative z-50 h-full w-[375px] max-w-full bg-[#f6f7fb] flex flex-col shadow-2xl"
+            style={{ minWidth: 320 }}
+          >
             <Sidebar
               isDrawer
               activeSize={"small"}
               setActiveSize={() => {}}
               onLogoutClick={handleLogout}
-              onLoginClick={openLogin}  
+              onLoginClick={openLogin}
               currentUser={currentUser}
             />
           </aside>
@@ -71,7 +88,6 @@ export default function SettingsPage() {
 
       {/* Main */}
       <main className="flex-1 py-6 px-4 ml-0 md:ml-[200px] overflow-y-auto">
-       
         <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
           <div className="flex items-center gap-2">
             <SearchBar />
@@ -80,7 +96,14 @@ export default function SettingsPage() {
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
             >
-              <svg width="32" height="32" fill="none" stroke="#032b41" strokeWidth="2" viewBox="0 0 24 24">
+              <svg
+                width="32"
+                height="32"
+                fill="none"
+                stroke="#032b41"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
@@ -92,16 +115,22 @@ export default function SettingsPage() {
             <GatePrompt onLogin={openLogin} title="Settings" />
           ) : (
             <>
-              <h1 className="text-[28px] md:text-[32px] font-bold text-[#03314b]">Settings</h1>
+              <h1 className="text-[28px] md:text-[32px] font-bold text-[#03314b]">
+                Settings
+              </h1>
               <div className="mt-2 h-px w-full bg-[#e1e7ea]" />
 
               {/* Subscription */}
               <section className="py-6 border-b border-[#e1e7ea]">
-                <div className="text-[#032b41] font-semibold mb-1">Your Subscription plan</div>
+                <div className="text-[#032b41] font-semibold mb-1">
+                  Your Subscription plan
+                </div>
                 {loading ? (
                   <div className="text-[#032b41]">Checking your plan…</div>
                 ) : isPremium ? (
-                  <div className="text-[#032b41]">{planName || "premium-plus"}</div>
+                  <div className="text-[#032b41]">
+                    {planName || "premium-plus"}
+                  </div>
                 ) : (
                   <>
                     <div className="text-[#032b41] mb-3">Basic</div>
@@ -118,7 +147,9 @@ export default function SettingsPage() {
               {/* Email */}
               <section className="py-6 border-b border-[#e1e7ea]">
                 <div className="text-[#032b41] font-semibold mb-1">Email</div>
-                <div className="text-[#032b41]">{currentUser?.email ?? "—"}</div>
+                <div className="text-[#032b41]">
+                  {currentUser?.email ?? "—"}
+                </div>
               </section>
             </>
           )}
@@ -128,21 +159,29 @@ export default function SettingsPage() {
   );
 }
 
-function GatePrompt({ onLogin, title }: { onLogin: () => void; title?: string }) {
+function GatePrompt({
+  onLogin,
+  title,
+}: {
+  onLogin: () => void;
+  title?: string;
+}) {
   return (
     <div className="w-full">
       <div className="mx-auto max-w-[720px] px-4">
-       
         <h1 className="text-[24px] md:text-[32px] font-bold text-[#03314b] text-left">
           {title || "This book"}
         </h1>
         <span className="block mt-2 h-[1px] w-full bg-[#e1e7ea]" />
-        
+
         <div className="text-center">
-          <img
+          <Image
             src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogin.e313e580.png&w=1080&q=75"
             alt="Login required"
+            width={420}
+            height={420}
             className="mx-auto my-10 w-[420px] max-w-full"
+            priority
           />
 
           <h2 className="mx-auto max-w-[640px] text-[22px] md:text-[26px] font-extrabold text-[#03314b] leading-snug">

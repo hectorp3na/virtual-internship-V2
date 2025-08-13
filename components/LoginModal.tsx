@@ -2,23 +2,15 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { usePathname, useSearchParams } from "next/navigation";
-
 
 interface LoginModalProps {
   onClose: () => void;
-  onOpenSignup?: () => void;
+  onOpenSignup?: () => void; 
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
   const router = useRouter();
-  const {
-    login,
-    register,
-    loginAsGuest,
-    loginWithGoogle,
-    logout,
-  } = useAuth();
+  const { login, loginAsGuest, loginWithGoogle } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -26,8 +18,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
 
   const finish = () => {
     onClose();
-    router.push("/for-you")
-
+    router.push("/for-you");
   };
 
   /** Guest Login */
@@ -35,32 +26,36 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
     try {
       await loginAsGuest();
       setError("");
-      finish(); 
-    } catch (error) {
-      console.error("Guest login failed:", error);
+      finish();
+    } catch (err) {
+      console.error("Guest login failed:", err);
       setError("Guest login failed. Try again.");
     }
   };
 
-
+  /** Google Login */
   const handleGoogleLogin = async () => {
     try {
       await loginWithGoogle();
       setError("");
       finish();
-    } catch (err: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (err: any) {
       console.error("Google login error:", err);
       setError("Google login failed. Please try again.");
     }
   };
 
-  /** Login */
+  /** Email/Password Login */
   const handleLogin = async () => {
     try {
       await login(email, password);
       setError("");
       finish();
-    } catch (err: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (err: any) {
       console.error("Login error:", err);
       if (err.code === "auth/invalid-email") setError("Invalid email address.");
       else if (err.code === "auth/user-not-found") setError("User not found.");
@@ -69,26 +64,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
     }
   };
 
-  /** Register */
-  const handleRegister = async () => {
-    try {
-      await register(email, password);
-      setError("");
-      finish(); 
-    } catch (err: any) {
-      console.error("Registration error:", err);
-      if (err.code === "auth/invalid-email") setError("Invalid email address.");
-      else if (err.code === "auth/email-already-in-use")
-        setError("Email already in use.");
-      else setError("Registration failed. Please try again.");
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
   
-  };
-
   return (
     <div className="sidebar__overlay" onClick={onClose}>
       <div className="auth__wrapper" onClick={(e) => e.stopPropagation()}>
@@ -108,13 +84,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
                 <path
                   d="M6.2253 4.81108C5.83477 4.42056 5.20161 4.42056 4.81108 4.81108C4.42056 5.20161 4.42056 5.83477 4.81108 6.2253L10.5858 12L4.81114 17.7747C4.42062 18.1652 4.42062 18.7984 4.81114 19.1889C5.20167 19.5794 5.83483 19.5794 6.22535 19.1889L12 13.4142L17.7747 19.1889C18.1652 19.5794 18.7984 19.5794 19.1889 19.1889C19.5794 18.7984 19.5794 18.1652 19.1889 17.7747L13.4142 12L19.189 6.2253C19.5795 5.83477 19.5795 5.20161 19.189 4.81108C18.7985 4.42056 18.1653 4.42056 17.7748 4.81108L12 10.5858L6.2253 4.81108Z"
                   fill="currentColor"
-                ></path>
+                />
               </svg>
             </div>
 
             <div className="auth__title">Log into Summarist</div>
 
-            {/* Guest Login Button */}
+            {/* Guest Login */}
             <button
               type="button"
               className="btn guest__btn--wrapper"
@@ -128,6 +104,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
               <span className="auth__separator--text">or</span>
             </div>
 
+            {/* Google Login */}
             <button
               type="button"
               className="btn google__btn--wrapper"
@@ -144,10 +121,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
               <span className="auth__separator--text">or</span>
             </div>
 
-            {/* Error Message */}
+            {/* Error */}
             {error && <div className="text-red-500 mb-2">{error}</div>}
 
-            {/* Login Form */}
+            {/* Email/Password Form */}
             <div className="auth__main--form">
               <input
                 className="auth__main--input"
@@ -167,20 +144,20 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
               <button type="button" className="btn" onClick={handleLogin}>
                 <span>Login</span>
               </button>
-
-              <button type="button" className="btn" onClick={handleRegister}>
-                <span>Create account</span>
-              </button>
+            
             </div>
           </div>
 
           {/* Bottom Section */}
           <div className="auth__forgot--password">Forgot your password?</div>
-          <button type="button" className="auth__switch--btn" 
-          onClick={() => onOpenSignup?.()}>
-            Don't have an account?
+          <button
+            type="button"
+            className="auth__switch--btn"
+            onClick={() => onOpenSignup?.()}
+          >
+            Don{'\''}t have an account?
           </button>
-
+        
         </div>
       </div>
     </div>

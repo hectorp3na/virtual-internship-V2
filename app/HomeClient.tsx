@@ -6,9 +6,10 @@ import { BiCrown } from "react-icons/bi";
 import { BsStarFill, BsStarHalf } from "react-icons/bs";
 import { RiLeafLine } from "react-icons/ri";
 import { useAuthModal } from "../contexts/AuthModalContext";
+import Image from "next/image";
 
 export default function HomeClient() {
-   const { openLogin } = useAuthModal();
+  const { openLogin } = useAuthModal();
 
   return (
     <>
@@ -31,7 +32,7 @@ export default function HomeClient() {
                         <br className="remove--tablet" />
                         individuals who barely have time to read,
                         <br className="remove--tablet" />
-                        and even people who don't like to read.
+                        and even people who don{"'"}t like to read.
                       </div>
                       <button
                         className="btn home__cta--btn"
@@ -41,7 +42,18 @@ export default function HomeClient() {
                       </button>
                     </div>
                     <figure className="landing__image--mask">
-                      <img src="/landing.png" alt="landing" />
+                      <Image
+                        src="/landing.png"
+                        alt="landing"
+                        width={400}
+                        height={400}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          maxWidth: "400px",
+                        }}
+                        priority
+                      />
                     </figure>
                   </div>
                 </div>
@@ -202,7 +214,7 @@ export default function HomeClient() {
                         </div>
                       </div>
                       <div className="review__body">
-                        This app has been a <b>game-changer</b> for me! It's
+                        This app has been a <b>game-changer</b> for me! It{"'"}s
                         saved me so much time and effort in reading and
                         comprehending books. Highly recommend it to all book
                         lovers.
@@ -222,8 +234,8 @@ export default function HomeClient() {
                       <div className="review__body">
                         I love this app! It provides
                         <b> concise and accurate summaries</b> of books in a way
-                        that is easy to understand. It's also very user-friendly
-                        and intuitive.
+                        that is easy to understand. It{"'"}s also very
+                        user-friendly and intuitive.
                       </div>
                     </div>
                     <div className="review">
@@ -256,19 +268,16 @@ export default function HomeClient() {
                         </div>
                       </div>
                       <div className="review__body">
-                        If you're a busy person who
-                        <b> loves reading but doesn't have the time</b> to read
-                        every book in full, this app is for you! The summaries
-                        are thorough and provide a great overview of the book's
-                        content.
+                        If you{"'"}re a busy person who
+                        <b> loves reading but doesn{"'"}t have the time</b> to
+                        read every book in full, this app is for you! The
+                        summaries are thorough and provide a great overview of
+                        the book{"'"}s content.
                       </div>
                     </div>
                   </div>
                   <div className="reviews__btn--wrapper">
-                    <button
-                      className="btn home__cta--btn"
-                      onClick={openLogin}
-                    >
+                    <button className="btn home__cta--btn" onClick={openLogin}>
                       Login
                     </button>
                   </div>

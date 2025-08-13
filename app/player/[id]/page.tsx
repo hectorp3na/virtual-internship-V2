@@ -9,6 +9,8 @@ import Sidebar from "../../../components/Sidebar";
 import SearchBar from "../../../components/SearchBar";
 import AudioPlayer from "components/AudioPlayer";
 import LoginModal from "../../../components/LoginModal";
+import SignUpModal from "../../../components/SignUpModal";
+import Image from "next/image";
 
 const fontSizes = {
   small: 16,
@@ -26,6 +28,18 @@ type Book = {
   imageLink?: string;
 };
 
+function useAuthModals() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+
+  const openLogin = () => { setIsSignUpModalOpen(false); setIsLoginModalOpen(true); };
+  const openSignup = () => { setIsLoginModalOpen(false); setIsSignUpModalOpen(true); };
+  const closeLogin = () => setIsLoginModalOpen(false);
+  const closeSignup = () => setIsSignUpModalOpen(false);
+
+  return { isLoginModalOpen, isSignUpModalOpen, openLogin, openSignup, closeLogin, closeSignup };
+}
+
 export default function PlayerPage() {
   const params = useParams();
   const id = params.id as string | undefined;
@@ -34,7 +48,15 @@ export default function PlayerPage() {
   const [loading, setLoading] = useState(true);
   const [fontSizeKey, setFontSizeKey] = useState<keyof typeof fontSizes>("small");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+   const {
+    isLoginModalOpen,
+    isSignUpModalOpen,
+    openLogin,
+    openSignup,
+    closeLogin,
+    closeSignup,
+  } = useAuthModals();
 
   const { user: currentUser } = useAuth();
   const isLocked = !currentUser;
@@ -48,7 +70,6 @@ export default function PlayerPage() {
     }
   };
 
-  const handleLoginClick = () => setIsLoginModalOpen(true);
 
   useEffect(() => {
     if (!id) return;
@@ -76,7 +97,7 @@ export default function PlayerPage() {
           activeSize={fontSizeKey}
           setActiveSize={setFontSizeKey}
           onLogoutClick={handleLogout}
-          onLoginClick={handleLoginClick}
+          onLoginClick={openLogin}
           currentUser={currentUser}
         />
       </aside>
@@ -97,7 +118,7 @@ export default function PlayerPage() {
               setActiveSize={setFontSizeKey}
               isDrawer
               onLogoutClick={handleLogout}
-              onLoginClick={handleLoginClick}
+              onLoginClick={openLogin}
               currentUser={currentUser}
             />
           </aside>
@@ -106,7 +127,10 @@ export default function PlayerPage() {
 
       {/* Login Modal */}
       {isLoginModalOpen && (
-        <LoginModal onClose={() => setIsLoginModalOpen(false)} />
+         <LoginModal onClose={closeLogin} onOpenSignup={openSignup} />
+      )}
+       {isSignUpModalOpen && (
+        <SignUpModal onClose={closeSignup} onOpenLogin={openLogin} />
       )}
 
       {/* Main Content */}
@@ -143,7 +167,7 @@ export default function PlayerPage() {
           ) : !book ? (
             <div className="text-gray-400">Book not found.</div>
           ) : isLocked ? (
-            <GatePrompt onLogin={handleLoginClick} title={book.title} />
+             <GatePrompt onLogin={openLogin} onSignup={openSignup} title={book.title} />
           ) : (
             <>
               <h1 className="text-2xl font-bold text-[#032b41] border-b border-[#e1e7ea] mb-8 pb-4 leading-[1.5]">
@@ -195,6 +219,7 @@ function GatePrompt({
   title,
 }: {
   onLogin: () => void;
+  onSignup: () => void;
   title?: string;
 }) {
   return (
@@ -208,7 +233,7 @@ function GatePrompt({
 
         {/* Illustration & text centered */}
         <div className="text-center">
-          <img
+          <Image
             src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogin.e313e580.png&w=1080&q=75"
             alt="Login required"
             className="mx-auto my-10 w-[420px] max-w-full"
@@ -224,6 +249,7 @@ function GatePrompt({
           >
             Login
           </button>
+         
         </div>
       </div>
     </div>

@@ -8,8 +8,8 @@ type NavProps = {
 };
 
 const Nav = ({ onLoginClick }: NavProps) => {
-  const { user, logout } = useAuth();
-  const router = useRouter();
+  
+  
 
   return (
     <nav className="nav">

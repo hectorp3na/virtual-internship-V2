@@ -4,15 +4,17 @@ import { useRouter, useParams } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "../../../firebase";
 import LoginModal from "../../../components/LoginModal";
-import { useAuth } from "@/hooks/useAuth"; // match ForYouPage import
+import { useAuth } from "@/hooks/useAuth"; 
 import Sidebar from "../../../components/Sidebar";
 import SearchBar from "../../../components/SearchBar";
+import SignUpModal from "../../../components/SignUpModal";
 import {
   ClockIcon,
   StarIcon,
   MicrophoneIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
+import Image from "next/image";
 
 type Book = {
   id: string;
@@ -35,6 +37,24 @@ type Book = {
   audioLink?: string;
 };
 
+function useAuthModals() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+
+    const openLogin = () => {
+    setIsSignUpModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+  const openSignup = () => {
+    setIsLoginModalOpen(false);
+    setIsSignUpModalOpen(true);
+  };
+  const closeLogin = () => setIsLoginModalOpen(false);
+  const closeSignup = () => setIsSignUpModalOpen(false);
+
+  return { isLoginModalOpen, isSignUpModalOpen, openLogin, openSignup, closeLogin, closeSignup };
+}
+
 export default function BookPage() {
 
   const params = useParams();
@@ -49,11 +69,34 @@ export default function BookPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSize, setActiveSize] = useState<"small" | "medium" | "large" | "xlarge">("small");
 
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+    const {
+    isLoginModalOpen,
+    isSignUpModalOpen,
+    openLogin,
+    openSignup,
+    closeLogin,
+    closeSignup,
+  } = useAuthModals();
 
-  const handleLoginClick = () => setIsLoginModalOpen(true);
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    if (!id) return;
+    (async () => {
+      try {
+        const res = await fetch(
+          `https://us-central1-summaristt.cloudfunctions.net/getBook?id=${id}`
+        );
+        const data = await res.json();
+        setBook(data);
+      } catch (e) {
+        console.error("Failed to fetch book:", e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [id]);
+
+const handleLogout = async () => {
     try {
       await signOut(auth);
     } catch (error) {
@@ -64,9 +107,10 @@ export default function BookPage() {
 
   const handleReadOrListen = (type: "read" | "listen") => {
     if (!currentUser) {
-      setIsLoginModalOpen(true);
+      openLogin();
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (book?.subscriptionRequired && !(currentUser as any)?.isSubscribed) {
       router.push("/choose-plan");
       return;
@@ -75,32 +119,15 @@ export default function BookPage() {
     router.push(`/player/${book!.id}`);
   };
 
-  
   const handleAddToLibrary = () => {
     if (!currentUser) {
-      setIsLoginModalOpen(true);
+      openLogin();
       return;
     }
     alert("Added to library!");
   };
 
-  useEffect(() => {
-    if (!id) return;
-    async function fetchBook() {
-      try {
-        const response = await fetch(
-          `https://us-central1-summaristt.cloudfunctions.net/getBook?id=${id}`
-        );
-        const data = await response.json();
-        setBook(data);
-      } catch (error) {
-        console.error("Failed to fetch book:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchBook();
-  }, [id]);
+
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -108,9 +135,9 @@ export default function BookPage() {
       <aside className="hidden md:block bg-white">
         <Sidebar
           activeSize={activeSize}
-          setActiveSize={setActiveSize}
+       setActiveSize={setActiveSize}
           onLogoutClick={handleLogout}
-          onLoginClick={handleLoginClick}
+          onLoginClick={openLogin}
           currentUser={currentUser}
         />
       </aside>
@@ -128,18 +155,23 @@ export default function BookPage() {
           >
             <Sidebar
               isDrawer
-              activeSize={activeSize}
-              setActiveSize={setActiveSize}
+             activeSize={activeSize}
+             setActiveSize={setActiveSize}
               onLogoutClick={handleLogout}
-              onLoginClick={handleLoginClick}
+              onLoginClick={openLogin}
               currentUser={currentUser}
             />
           </aside>
         </div>
       )}
 
-      {/* Login Modal (same as ForYouPage) */}
-      {isLoginModalOpen && <LoginModal onClose={() => setIsLoginModalOpen(false)} />}
+       {/* Auth Modals */}
+      {isLoginModalOpen && (
+        <LoginModal onClose={closeLogin} onOpenSignup={openSignup} />
+      )}
+      {isSignUpModalOpen && (
+        <SignUpModal onClose={closeSignup} onOpenLogin={openLogin} />
+      )}
 
       {/* Main Content */}
       <main className="flex-1 px-8 py-6 ml-0 md:ml-[200px]">
@@ -260,7 +292,7 @@ export default function BookPage() {
 
                 {/* Book description */}
                 <div className="mb-7">
-                  <h3 className="text-lg font-bold text-[#032b41] mb-2">What's it about?</h3>
+                  <h3 className="text-lg font-bold text-[#032b41] mb-2">What{'\''}s it about?</h3>
                   <div className="flex flex-wrap gap-3 mb-5">
                     {book.tags?.map((tag) => (
                       <div
@@ -296,7 +328,7 @@ export default function BookPage() {
             ) : (
               book && (
                 <figure className="w-64 h-80 relative rounded-md flex items-center justify-center">
-                  <img
+                  <Image 
                     src={book.imageLink || book.img || "/fallback.jpg"}
                     alt={book.title}
                     className="w-full object-cover rounded-md"

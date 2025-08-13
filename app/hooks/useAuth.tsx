@@ -9,10 +9,14 @@ import {
   signInWithPopup,
   User as FirebaseUser,
 } from "firebase/auth";
-
-
-import { auth } from "../../firebase";
+import { auth, db, provider as googleProvider } from "../../firebase";
 import { useRouter } from "next/navigation";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 
 type AuthContextType = {
   user: FirebaseUser | null;
@@ -26,6 +30,36 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+async function ensureUserDocument(user: FirebaseUser) {
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      uid: user.uid,
+      email: user.email ?? null,
+      displayName: user.displayName ?? null,
+      photoURL: user.photoURL ?? null,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      plan: "free",
+      roles: ["user"],
+    });
+  } else {
+    // Optional: keep an updated timestamp & sync profile fields
+    await setDoc(
+      ref,
+      {
+        updatedAt: serverTimestamp(),
+        displayName: user.displayName ?? null,
+        photoURL: user.photoURL ?? null,
+      },
+      { merge: true }
+    );
+  }
+}
+
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,9 +67,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const googleProvider = new GoogleAuthProvider();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setLoading(false);
+   if (currentUser) {
+        try {
+          await ensureUserDocument(currentUser);
+        } catch (e) {
+          console.error("Failed to ensure user document:", e);
+        }
+      }
     });
     return unsubscribe;
   }, []);
@@ -61,7 +102,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
-    } catch (err: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (err: any) {
       console.error("Login error:", err?.code, err?.message);
       friendlyThrow(err?.code, "Login failed. Please try again.");
     }
@@ -71,7 +114,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const register = async (email: string, password: string) => {
     try {
       await createUserWithEmailAndPassword(auth, email.trim(), password);
-    } catch (err: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (err: any) {
       console.error("Register error:", err?.code, err?.message);
       friendlyThrow(err?.code, "Registration failed. Please try again.");
     }
@@ -83,7 +128,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const guestEmail = "guest@example.com";
       const guestPassword = "guest123";
       await signInWithEmailAndPassword(auth, guestEmail, guestPassword);
-    } catch (err: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (err: any) {
       console.error("Guest login error:", err?.code, err?.message);
       friendlyThrow(err?.code, "Guest login failed. Please try again.");
     }
@@ -93,7 +140,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const loginWithGoogle = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
-    } catch (err: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (err: any) {
       console.error("Google login error:", err?.code, err?.message);
       friendlyThrow(err?.code, "Google login failed. Please try again.");
     }
@@ -104,7 +153,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       await signOut(auth);
       router.push("/"); // optional
-    } catch (err: any) {
+    } 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    catch (err: any) {
       console.error("Logout error:", err?.code, err?.message);
       friendlyThrow(err?.code, "Logout failed. Please try again.");
     }
