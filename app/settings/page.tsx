@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useState } from "react";
 import { signOut } from "firebase/auth";
+import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import { auth } from "../../firebase";
 import { useAuth } from "@/hooks/useAuth";
 import Sidebar from "../../components/Sidebar";
@@ -11,15 +12,64 @@ import LoginModal from "../../components/LoginModal";
 import SignUpModal from "../../components/SignUpModal";
 import Image from "next/image";
 
+type UserDoc = {
+  role?: string | null;
+  subscriptionStatus?: string | null;
+  subscriptionPlanName?: string | null;
+  subscriptionPlan?: string | null; 
+  priceId?: string | null;
+};
+
+const PRICE_LABELS: Record<string, string> = {
+  "price_1RtNU9LaXqGfXK4JikVfj19M": "Premium Monthly",
+  "price_1RtNT9LaXqGfXK4JpjOyFOQA": "Premium Plus Yearly",
+};
+
+function computePlanName(user?: UserDoc, fallbackPremium?: boolean): string {
+  if (user?.subscriptionPlanName?.trim()) return user.subscriptionPlanName!;
+  if (user?.subscriptionPlan && !String(user.subscriptionPlan).startsWith("price_"))
+    return String(user.subscriptionPlan);
+  if (user?.priceId && PRICE_LABELS[user.priceId]) return PRICE_LABELS[user.priceId];
+  return fallbackPremium ? "Premium" : "Basic";
+}
+
 export default function SettingsPage() {
   const { user: currentUser } = useAuth();
-  const { loading, isPremium, planName } = useSubscription(
-    currentUser?.uid ?? null
-  );
+  const { loading, isPremium, planName } = useSubscription(currentUser?.uid ?? null);
 
+  const db = useMemo(() => getFirestore(), []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
+
+  // Live Firestore subscription so UI updates right after webhook writes
+  useEffect(() => {
+    if (!currentUser?.uid) {
+      setUserDoc(null);
+      return;
+    }
+    const ref = doc(db, "users", currentUser.uid);
+    const unsub = onSnapshot(ref, (snap) => {
+      setUserDoc((snap.data() as UserDoc) ?? null);
+    });
+    return () => unsub();
+  }, [db, currentUser?.uid]);
+
+  // Derive premium from Firestore FIRST, then fall back to the hook
+  const isPremiumFromDoc: boolean | undefined = userDoc
+    ? userDoc.role === "premium" ||
+      userDoc.subscriptionStatus === "active" ||
+      userDoc.subscriptionStatus === "trialing"
+    : undefined;
+
+  const showPremium = (isPremiumFromDoc ?? isPremium) === true;
+
+  // Prefer live Firestore name; fall back to hook’s planName; then generic
+  const effectivePlanName =
+    computePlanName(userDoc ?? undefined, showPremium) ||
+    planName ||
+    (showPremium ? "Premium" : "Basic");
 
   const openLogin = () => {
     setIsSignUpModalOpen(false);
@@ -125,18 +175,22 @@ export default function SettingsPage() {
                 <div className="text-[#032b41] font-semibold mb-1">
                   Your Subscription plan
                 </div>
-                {loading ? (
+
+                {loading && userDoc === null ? (
                   <div className="text-[#032b41]">Checking your plan…</div>
-                ) : isPremium ? (
-                  <div className="text-[#032b41]">
-                    {planName || "premium-plus"}
+                ) : showPremium ? (
+                  <div className="flex items-center gap-2 text-[#032b41]">
+                    <span className="font-semibold">{effectivePlanName}</span>
+                    <span className="text-[11px] inline-block px-2 py-0.5 rounded-full bg-[#2be080] text-[#032b41] font-semibold">
+                      {userDoc?.subscriptionStatus ?? "active"}
+                    </span>
                   </div>
                 ) : (
                   <>
                     <div className="text-[#032b41] mb-3">Basic</div>
                     <a
                       href="/choose-plan"
-                      className="inline-flex items-center rounded-md !bg-[#22c55e] px-4 py-2 text-md font-medium text-{#032b41} hover:brightness-95 active:translate-y-[1px] transition"
+                      className="inline-flex items-center rounded-md !bg-[#22c55e] px-4 py-2 text-md font-medium text-[#032b41] hover:brightness-95 active:translate-y-[1px] transition"
                     >
                       Upgrade to Premium
                     </a>
@@ -184,7 +238,7 @@ function GatePrompt({
             priority
           />
 
-          <h2 className="mx-auto max-w-[640px] text-[22px] md:text-[26px] font-extrabold text-[#03314b] leading-snug">
+        <h2 className="mx-auto max-w-[640px] text-[22px] md:text-[26px] font-extrabold text-[#03314b] leading-snug">
             Log in to your account to see your details.
           </h2>
 
@@ -198,4 +252,5 @@ function GatePrompt({
       </div>
     </div>
   );
+
 }
