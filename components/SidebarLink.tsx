@@ -65,7 +65,7 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
     );
   }
 
-  // Fallback
+  
   return (
     <div className="flex items-center gap-3 py-2 pl-5 pr-3 rounded transition relative text-[#032b41] text-sm font-medium">
       {content}

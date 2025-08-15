@@ -45,20 +45,53 @@ function useAuthModals() {
   const closeLogin = () => setIsLoginModalOpen(false);
   const closeSignup = () => setIsSignUpModalOpen(false);
 
-  return { isLoginModalOpen, isSignUpModalOpen, openLogin, openSignup, closeLogin, closeSignup };
+  return {
+    isLoginModalOpen,
+    isSignUpModalOpen,
+    openLogin,
+    openSignup,
+    closeLogin,
+    closeSignup,
+  };
 }
 
 function PlayerSkeleton() {
   return (
-    <div role="status" aria-busy="true" aria-live="polite" className="animate-pulse">
-      <div className="bg-gray-200 rounded mb-3" style={{ width: "70%", height: 28 }} />
-      <div className="bg-gray-100 rounded mb-6" style={{ width: "35%", height: 16 }} />
+    <div
+      role="status"
+      aria-busy="true"
+      aria-live="polite"
+      className="animate-pulse"
+    >
+      <div
+        className="bg-gray-200 rounded mb-3"
+        style={{ width: "70%", height: 28 }}
+      />
+      <div
+        className="bg-gray-100 rounded mb-6"
+        style={{ width: "35%", height: 16 }}
+      />
       <div className="space-y-3">
-        <div className="bg-gray-200 rounded" style={{ width: "100%", height: 16 }} />
-        <div className="bg-gray-200 rounded" style={{ width: "95%", height: 16 }} />
-        <div className="bg-gray-200 rounded" style={{ width: "90%", height: 16 }} />
-        <div className="bg-gray-200 rounded" style={{ width: "98%", height: 16 }} />
-        <div className="bg-gray-200 rounded" style={{ width: "82%", height: 16 }} />
+        <div
+          className="bg-gray-200 rounded"
+          style={{ width: "100%", height: 16 }}
+        />
+        <div
+          className="bg-gray-200 rounded"
+          style={{ width: "95%", height: 16 }}
+        />
+        <div
+          className="bg-gray-200 rounded"
+          style={{ width: "90%", height: 16 }}
+        />
+        <div
+          className="bg-gray-200 rounded"
+          style={{ width: "98%", height: 16 }}
+        />
+        <div
+          className="bg-gray-200 rounded"
+          style={{ width: "82%", height: 16 }}
+        />
       </div>
       <span className="sr-only">Loading book…</span>
     </div>
@@ -74,7 +107,8 @@ export default function PlayerPage() {
 
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fontSizeKey, setFontSizeKey] = useState<keyof typeof fontSizes>("small");
+  const [fontSizeKey, setFontSizeKey] =
+    useState<keyof typeof fontSizes>("small");
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const {
@@ -94,12 +128,12 @@ export default function PlayerPage() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-  
+   
     } catch (error) {
       console.error("Logout error:", error);
     }
   };
-  
+
 
   useEffect(() => {
     if (!id) return;
@@ -108,7 +142,9 @@ export default function PlayerPage() {
     (async () => {
       try {
         const response = await fetch(
-          `https://us-central1-summaristt.cloudfunctions.net/getBook?id=${encodeURIComponent(id)}`
+          `https://us-central1-summaristt.cloudfunctions.net/getBook?id=${encodeURIComponent(
+            id
+          )}`
         );
         const data = await response.json();
         if (alive) setBook(data);
@@ -126,7 +162,7 @@ export default function PlayerPage() {
 
   useEffect(() => {
     if (!book) return;
-    if (!currentUser) return; 
+    if (!currentUser) return;
     if (membershipLoading) return;
 
     const isPremiumBook = toBool(book.subscriptionRequired);
@@ -175,26 +211,37 @@ export default function PlayerPage() {
       )}
 
       {/* Auth Modals */}
-      {isLoginModalOpen && <LoginModal onClose={closeLogin} onOpenSignup={openSignup} />}
-      {isSignUpModalOpen && <SignUpModal onClose={closeSignup} onOpenLogin={openLogin} />}
+      {isLoginModalOpen && (
+        <LoginModal onClose={closeLogin} onOpenSignup={openSignup} />
+      )}
+      {isSignUpModalOpen && (
+        <SignUpModal onClose={closeSignup} onOpenLogin={openLogin} />
+      )}
 
       {/* Main Content */}
       <main className="flex-1 px-8 pt-6 pb-[200px] ml-0 md:ml-[200px] overflow-y-auto">
         <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
           <div className="flex items-center gap-2">
             <SearchBar
-             onSelect={(b) => {
-        const href = `/book/${encodeURIComponent(b.id)}`;
-        router.push(href);
-      }}
+              onSelect={(b) => {
+                const href = `/book/${encodeURIComponent(b.id)}`;
+                router.push(href);
+              }}
             />
-           
+
             <button
               className="block md:hidden ml-3 p-2 mb-6"
               onClick={() => setSidebarOpen(true)}
               aria-label="Open menu"
             >
-              <svg width="32" height="32" fill="none" stroke="#032b41" strokeWidth="2" viewBox="0 0 24 24">
+              <svg
+                width="32"
+                height="32"
+                fill="none"
+                stroke="#032b41"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" d="M4 7h16M4 12h16M4 17h16" />
               </svg>
             </button>
@@ -207,7 +254,11 @@ export default function PlayerPage() {
           ) : !book ? (
             <div className="text-gray-400">Book not found.</div>
           ) : isLocked ? (
-            <GatePrompt onLogin={openLogin} onSignup={openSignup} title={book.title} />
+            <GatePrompt
+              onLogin={openLogin}
+              onSignup={openSignup}
+              title={book.title}
+            />
           ) : (
             <>
               <h1 className="text-2xl font-bold text-[#032b41] border-b border-[#e1e7ea] mb-8 pb-4 leading-[1.5]">
@@ -232,7 +283,7 @@ export default function PlayerPage() {
                   title={book.title}
                   author={book.author}
                 />
-         
+             
               </div>
             </>
           )}
@@ -254,13 +305,12 @@ function GatePrompt({
   return (
     <div className="w-full">
       <div className="mx-auto max-w-[720px] px-4">
-      
+       
         <h1 className="text-[24px] md:text-[32px] font-bold text-[#03314b] text-left">
           {title || "This book"}
         </h1>
         <span className="block mt-2 h-[1px] w-full bg-[#e1e7ea]" />
 
-     
         <div className="text-center">
           <Image
             src="https://summarist.vercel.app/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Flogin.e313e580.png&w=1080&q=75"
@@ -280,7 +330,7 @@ function GatePrompt({
           >
             Login
           </button>
-        
+       
         </div>
       </div>
     </div>

@@ -148,7 +148,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <SidebarLink key={i} {...item} />
           ))}
 
-          {/* Conditional Login / Logout */}
+
           {currentUser ? (
             <SidebarLink
               text="Logout"

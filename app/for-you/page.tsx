@@ -14,7 +14,7 @@ import LoginModal from "../../components/LoginModal";
 import SignUpModal from "../../components/SignUpModal";
 import { ClockIcon } from "@heroicons/react/24/outline";
 
-/* ------------------ Duration helpers (MM:SS like screenshot) ------------------ */
+
 function toSeconds(input?: number | string | null): number | null {
   if (input == null) return null;
   if (typeof input === "number" && Number.isFinite(input)) return input;
@@ -80,7 +80,7 @@ export function DurationText({
 }
 
 export { toSeconds as toBookSeconds, formatClock as formatBookClock };
-/* ----------------------------------------------------------------------------- */
+
 
 function useAuthModals() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -213,7 +213,7 @@ export default function ForYouPage() {
           </div>
         </div>
 
-        {/* You can now use <DurationText duration={book.duration} /> inside your lists */}
+        {/* Use <DurationText duration={book.duration} /> inside your lists */}
         <div className="mt-10">
           <SelectedForYou />
         </div>

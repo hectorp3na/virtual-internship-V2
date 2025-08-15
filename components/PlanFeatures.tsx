@@ -56,7 +56,7 @@ const features = [
         xmlns="http://www.w3.org/2000/svg"
         aria-hidden="true"
       >
-        {/* simple valid check icon */}
+     
         <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1.293-6.293l6-6-1.414-1.414L10 13.586 8.707 12.293 7.293 13.707 10.707 17.12z" />
       </svg>
     ),

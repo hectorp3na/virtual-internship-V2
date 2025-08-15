@@ -137,7 +137,7 @@ export default function SelectedForYou() {
           href={`/book/${book.id}`}
           className="flex items-center bg-[#fbefd6] hover:bg-yellow-100 rounded-lg shadow-sm transition p-6"
         >
-          {/* Book Info Text (Left Side) */}
+          
           <div className="flex-1 pr-4">
             <p className="text-sm text-gray-700 mb-2">{book.subTitle}</p>
             <div className="border-t border-gray-200 my-2"></div>

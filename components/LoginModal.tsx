@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 interface LoginModalProps {
   onClose: () => void;
-  onOpenSignup?: () => void; 
+  onOpenSignup?: () => void;
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
@@ -39,9 +39,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
       await loginWithGoogle();
       setError("");
       finish();
-    } 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    catch (err: any) {
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.error("Google login error:", err);
       setError("Google login failed. Please try again.");
     }
@@ -53,18 +52,17 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
       await login(email, password);
       setError("");
       finish();
-    } 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    catch (err: any) {
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.error("Login error:", err);
       if (err.code === "auth/invalid-email") setError("Invalid email address.");
       else if (err.code === "auth/user-not-found") setError("User not found.");
-      else if (err.code === "auth/wrong-password") setError("Incorrect password.");
+      else if (err.code === "auth/wrong-password")
+        setError("Incorrect password.");
       else setError("Login failed. Please try again.");
     }
   };
 
-  
   return (
     <div className="sidebar__overlay" onClick={onClose}>
       <div className="auth__wrapper" onClick={(e) => e.stopPropagation()}>
@@ -116,12 +114,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
               <div>Login with Google</div>
             </button>
 
-            {/* Separator */}
+           
             <div className="auth__separator">
               <span className="auth__separator--text">or</span>
             </div>
 
-            {/* Error */}
+
             {error && <div className="text-red-500 mb-2">{error}</div>}
 
             {/* Email/Password Form */}
@@ -144,18 +142,18 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
               <button type="button" className="btn" onClick={handleLogin}>
                 <span>Login</span>
               </button>
-            
+        
             </div>
           </div>
 
-          {/* Bottom Section */}
+ 
           <div className="auth__forgot--password">Forgot your password?</div>
           <button
             type="button"
             className="auth__switch--btn"
             onClick={() => onOpenSignup?.()}
           >
-            Don{'\''}t have an account?
+            Don{"'"}t have an account?
           </button>
         
         </div>

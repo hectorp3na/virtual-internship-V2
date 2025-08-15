@@ -46,7 +46,7 @@ async function ensureUserDocument(user: FirebaseUser) {
       roles: ["user"],
     });
   } else {
-    // Optional: keep an updated timestamp & sync profile fields
+
     await setDoc(
       ref,
       {
@@ -98,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  /** Login with email/password */
+
   const login = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  /** Register with email/password */
+
   const register = async (email: string, password: string) => {
     try {
       await createUserWithEmailAndPassword(auth, email.trim(), password);
@@ -122,7 +122,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  /** Guest login (ensure this user exists in the SAME Firebase project) */
   const loginAsGuest = async () => {
     try {
       const guestEmail = "guest@example.com";
