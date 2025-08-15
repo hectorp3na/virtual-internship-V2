@@ -44,6 +44,14 @@ export default function SearchBar({
     return () => document.removeEventListener("mousedown", onDocClick);
   }, []);
 
+  const getMessage = (e: unknown) =>
+    e instanceof Error ? e.message : String(e ?? "");
+  const isAbortError = (e: unknown): e is { name: "AbortError" } =>
+    typeof e === "object" &&
+    e !== null &&
+    "name" in e &&
+    (e as { name?: unknown }).name === "AbortError";
+
   useEffect(() => {
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     if (trimmed.length < minChars) {
@@ -77,11 +85,11 @@ export default function SearchBar({
         setItems(normalized);
         setOpen(true);
         setActive(normalized.length ? 0 : -1);
-      } catch (e: any) {
-        if (e?.name === "AbortError") return;
+      } catch (e: unknown) {
+        if (isAbortError(e)) return;
         setItems([]);
-        setError(e?.message || "Something went wrong");
-        setOpen(true); 
+        setError(getMessage(e) || "Something went wrong");
+        setOpen(true);
       } finally {
         setLoading(false);
       }
@@ -92,29 +100,68 @@ export default function SearchBar({
     };
   }, [trimmed, minChars]);
 
-  function normalizeItems(data: any): Book[] {
-    const list = Array.isArray(data) ? data : data?.books || data?.items || [];
-    return list.map((b: any) => ({
-      id:
-        b.id ||
-        b.bookId ||
-        b.isbn ||
-        b.ISBN_13 ||
-        b.ISBN_10 ||
-        crypto.randomUUID(),
-      title: b.title || b.name || b.volumeInfo?.title || "Untitled",
-      authors: b.authors || b.author || b.volumeInfo?.authors || [],
-      thumbnail:
-        b.thumbnail ||
-        b.image ||
-        b.coverImage ||
-        b.cover ||
-        b.volumeInfo?.imageLinks?.thumbnail ||
-        b.volumeInfo?.imageLinks?.smallThumbnail ||
-        "",
-      description:
-        b.description || b.summary || b.volumeInfo?.description || "",
-    }));
+    const isObj = (v: unknown): v is Record<string, unknown> =>
+    typeof v === "object" && v !== null;
+
+  const str = (v: unknown): string | undefined =>
+    typeof v === "string" ? v : typeof v === "number" ? String(v) : undefined;
+
+   function normalizeItems(data: unknown): Book[] {
+    const obj = isObj(data) ? (data as { books?: unknown; items?: unknown }) : undefined;
+
+    let listUnknown: unknown[] = [];
+    if (Array.isArray(data)) listUnknown = data as unknown[];
+    else if (obj) {
+      if (Array.isArray(obj.books)) listUnknown = obj.books as unknown[];
+      else if (Array.isArray(obj.items)) listUnknown = obj.items as unknown[];
+    }
+
+    return listUnknown.map((b): Book => {
+      const rec = isObj(b) ? (b as Record<string, unknown>) : {};
+      const vi = isObj(rec.volumeInfo) ? (rec.volumeInfo as Record<string, unknown>) : undefined;
+      const imageLinks = isObj(vi?.imageLinks)
+        ? (vi!.imageLinks as Record<string, unknown>)
+        : undefined;
+
+      const id =
+        str(rec.id) ??
+        str(rec.bookId) ??
+        str(rec.isbn) ??
+        str(rec.ISBN_13) ??
+        str(rec.ISBN_10) ??
+        crypto.randomUUID();
+
+      const title =
+        str(rec.title) ??
+        str(rec.name) ??
+        str(vi?.title) ??
+        "Untitled";
+
+      const authorsRaw =
+        rec.authors ?? rec.author ?? (vi?.authors as unknown);
+      const authors: string[] | string = Array.isArray(authorsRaw)
+        ? (authorsRaw.filter((x): x is string => typeof x === "string") as string[])
+        : typeof authorsRaw === "string"
+        ? authorsRaw
+        : [];
+
+      const thumbnail =
+        str(rec.thumbnail) ??
+        str(rec.image) ??
+        str(rec.coverImage) ??
+        str(rec.cover) ??
+        str(imageLinks?.thumbnail) ??
+        str(imageLinks?.smallThumbnail) ??
+        "";
+
+      const description =
+        str(rec.description) ??
+        str(rec.summary) ??
+        str(vi?.description) ??
+        "";
+
+      return { id, title, authors, thumbnail, description };
+    });
   }
 
   function pick(index: number) {

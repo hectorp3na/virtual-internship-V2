@@ -127,7 +127,12 @@ function useAuthModals() {
   return { isLoginModalOpen, isSignUpModalOpen, openLogin, openSignup, closeLogin, closeSignup };
 }
 
-const toBool = (v: any) => v === true || v === "true" || v === 1 || v === "1";
+const toBool = (v: unknown): boolean => {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") return v === "true" || v === "1";
+  if (typeof v === "number") return v === 1;
+  return false;
+};
 
 export default function BookPage() {
  

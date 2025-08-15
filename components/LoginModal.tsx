@@ -8,6 +8,18 @@ interface LoginModalProps {
   onOpenSignup?: () => void;
 }
 
+type ErrWithCode = { code?: string };
+
+const getCode = (err: unknown): string | undefined =>
+  typeof err === "object" && err && "code" in err
+    ? typeof (err as ErrWithCode).code === "string"
+      ? (err as ErrWithCode).code
+      : undefined
+    : undefined;
+
+const getMessage = (err: unknown): string =>
+  err instanceof Error ? err.message : String(err ?? "");
+
 const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
   const router = useRouter();
   const { login, loginAsGuest, loginWithGoogle } = useAuth();
@@ -52,12 +64,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
       await login(email, password);
       setError("");
       finish();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.error("Login error:", err);
-      if (err.code === "auth/invalid-email") setError("Invalid email address.");
-      else if (err.code === "auth/user-not-found") setError("User not found.");
-      else if (err.code === "auth/wrong-password")
+      const code = getCode(err);
+      if (code === "auth/invalid-email") setError("Invalid email address.");
+      else if (code === "auth/user-not-found") setError("User not found.");
+      else if (code === "auth/wrong-password")
         setError("Incorrect password.");
       else setError("Login failed. Please try again.");
     }

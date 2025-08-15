@@ -3,7 +3,14 @@
 import { useEffect, useState } from "react";
 import { auth, app } from "../../firebase";
 import type { User as FirebaseUser } from "firebase/auth";
-import { getFirestore, doc, onSnapshot } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  onSnapshot,
+  type DocumentData,
+  type DocumentSnapshot,
+  type FirestoreError,
+} from "firebase/firestore";
 
 type MembershipState = {
   isPremium: boolean;
@@ -11,22 +18,33 @@ type MembershipState = {
   error?: string;
 };
 
+type BasicUser = Pick<FirebaseUser, "uid">;
+
+type UserDoc = {
+  isSubscribed?: boolean | null;
+  subscription?: { status?: string | null } | null;
+  plan?: string | null;
+  role?: string | null;
+} & Record<string, unknown>;
+
 const db = getFirestore(app);
 
-function isUserLike(u: any): u is { uid: string } {
-  return !!u && typeof u.uid === "string";
+function isUserLike(u: unknown): u is BasicUser {
+  return !!u && typeof (u as { uid?: unknown }).uid === "string";
 }
 
-function toPremium(uData: any): boolean {
+function toPremium(uData: unknown): boolean {
+  if (!uData || typeof uData !== "object") return false;
+  const d = uData as UserDoc;
   return (
-    uData?.isSubscribed === true ||
-    uData?.subscription?.status === "active" ||
-    uData?.plan === "premium" ||
-    uData?.role === "premium"
+    d.isSubscribed === true ||
+    d.subscription?.status === "active" ||
+    d.plan === "premium" ||
+    d.role === "premium"
   );
 }
 
-export function useMembership(user?: FirebaseUser | any) {
+export function useMembership(user?: BasicUser | null) {
   const [state, setState] = useState<MembershipState>({
     isPremium: false,
     loading: true,
@@ -42,12 +60,14 @@ export function useMembership(user?: FirebaseUser | any) {
     const ref = doc(db, "users", fbUser.uid);
     const unsub = onSnapshot(
       ref,
-      (snap) => {
-        const data = snap.data() || {};
+      (snap: DocumentSnapshot<DocumentData>) => {
+        const data = (snap.data() ?? {}) as UserDoc;
         const isPremium = toPremium(data);
         setState({ isPremium, loading: false });
       },
-      (err) => setState({ isPremium: false, loading: false, error: err.message })
+      (err: FirestoreError) => {
+        setState({ isPremium: false, loading: false, error: err.message });
+      }
     );
 
     return () => unsub();
