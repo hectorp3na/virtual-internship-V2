@@ -51,7 +51,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onOpenSignup }) => {
       await loginWithGoogle();
       setError("");
       finish();
-    } catch (err: any) {
+    } catch (err: unknown) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       console.error("Google login error:", err);
       setError("Google login failed. Please try again.");
