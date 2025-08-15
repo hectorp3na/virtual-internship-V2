@@ -1,51 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
-import { ClockIcon, StarIcon } from "@heroicons/react/24/outline";
+import { StarIcon } from "@heroicons/react/24/outline";
 import Link from "next/link";
-
-
-function toSeconds(input?: number | string | null): number | null {
-  if (input == null) return null;
-  if (typeof input === "number" && Number.isFinite(input)) return input;
-
-  if (typeof input === "string") {
-    const trimmed = input.trim().toLowerCase();
-
-    const parts = trimmed.split(":");
-    if (parts.length === 2 || parts.length === 3) {
-      const nums = parts.map((p) => Number(p));
-      if (nums.every((n) => Number.isFinite(n))) {
-        if (parts.length === 2) {
-          const [mm, ss] = nums;
-          return mm * 60 + ss;
-        } else {
-          const [hh, mm, ss] = nums;
-          return hh * 3600 + mm * 60 + ss;
-        }
-      }
-    }
-
-    const minMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*(m|min|mins|minute|minutes)$/);
-    if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
-
-    if (!Number.isNaN(Number(trimmed))) {
-      const n = Number(trimmed);
-      return n >= 1000 ? n : Math.round(n * 60);
-    }
-  }
-  return null;
-}
-
-function formatClock(secs?: number | null): string {
-  if (secs == null || !Number.isFinite(secs) || secs <= 0) return "-";
-  const total = Math.round(secs);
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const pad2 = (n: number) => n.toString().padStart(2, "0");
-  return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${pad2(m)}:${pad2(s)}`;
-}
-
+import DurationText from "./DurationText"; 
 function useAudioDuration(src?: string) {
   const [secs, setSecs] = useState<number | null>(null);
 
@@ -106,7 +63,7 @@ export default function SuggestedBooks() {
         const response = await fetch(
           "https://us-central1-summaristt.cloudfunctions.net/getBooks?status=suggested"
         );
-        const data = await response.json();
+        const data = (await response.json()) as Book[];
         setBooks(data);
       } catch (error) {
         console.error("Failed to fetch books:", error);
@@ -154,8 +111,7 @@ export default function SuggestedBooks() {
 
 function SuggestedCard({ book }: { book: Book }) {
   const audioSecs = useAudioDuration(book.audioLink);
-  const secondsFromApi = toSeconds(book.duration);
-  const durationClock = formatClock(secondsFromApi ?? audioSecs);
+  const durationValue = book.duration ?? audioSecs; // string | number | null
 
   return (
     <Link
@@ -173,6 +129,7 @@ function SuggestedCard({ book }: { book: Book }) {
           className="w-full h-full object-cover rounded"
           src={book.imageLink || book.img || "/fallback.jpg"}
           alt={book.title}
+          loading="lazy"
         />
       </figure>
 
@@ -183,10 +140,7 @@ function SuggestedCard({ book }: { book: Book }) {
       <p className="text-xs text-gray-400 mt-1">{book.subTitle}</p>
 
       <div className="flex items-center justify-between text-xs text-gray-600 mt-3">
-        <div className="flex items-center space-x-1">
-          <ClockIcon className="w-4 h-4" />
-          <span>{durationClock}</span>
-        </div>
+        <DurationText duration={durationValue} />
         <div className="flex items-center space-x-1">
           <StarIcon className="w-4 h-4" />
           <span>{book.averageRating ?? "-"}</span>
