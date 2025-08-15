@@ -4,7 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "../../../firebase";
 import LoginModal from "../../../components/LoginModal";
-import { useAuth } from "@/hooks/useAuth"; 
+import { useAuth } from "@/hooks/useAuth";
 import Sidebar from "../../../components/Sidebar";
 import SearchBar from "../../../components/SearchBar";
 import SignUpModal from "../../../components/SignUpModal";
@@ -15,6 +15,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import Image from "next/image";
+import { useMembership } from "@/hooks/useMembership";
 
 type Book = {
   id: string;
@@ -23,7 +24,7 @@ type Book = {
   subTitle?: string;
   imageLink?: string;
   img?: string;
-  duration?: string;
+  duration?: string | number | null;
   totalRating?: number;
   averageRating?: number;
   keyIdeas?: number;
@@ -33,15 +34,86 @@ type Book = {
   tags?: string[];
   bookDescription?: string;
   authorDescription?: string;
-  subscriptionRequired?: boolean;
+  subscriptionRequired?: boolean | string | number;
   audioLink?: string;
 };
+
+function toSeconds(input?: number | string | null): number | null {
+  if (input == null) return null;
+  if (typeof input === "number" && Number.isFinite(input)) return input;
+
+  if (typeof input === "string") {
+    const trimmed = input.trim().toLowerCase();
+
+    const parts = trimmed.split(":");
+    if (parts.length === 2 || parts.length === 3) {
+      const nums = parts.map((p) => Number(p));
+      if (nums.every((n) => Number.isFinite(n))) {
+        if (parts.length === 2) {
+          const [mm, ss] = nums;
+          return mm * 60 + ss;
+        } else {
+          const [hh, mm, ss] = nums;
+          return hh * 3600 + mm * 60 + ss;
+        }
+      }
+    }
+
+    const minMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*(m|min|mins|minute|minutes)$/);
+    if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
+
+    if (!Number.isNaN(Number(trimmed))) {
+      const n = Number(trimmed);
+      return n >= 1000 ? n : Math.round(n * 60);
+    }
+  }
+  return null;
+}
+
+function formatClock(secs?: number | null): string {
+  if (secs == null || !Number.isFinite(secs) || secs <= 0) return "-";
+  const total = Math.round(secs);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad2 = (n: number) => n.toString().padStart(2, "0");
+  return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${pad2(m)}:${pad2(s)}`;
+}
+
+function useAudioDuration(src?: string) {
+  const [secs, setSecs] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!src) { setSecs(null); return; }
+
+    const a = new Audio();
+    a.preload = "metadata";
+    a.src = src;
+
+    const onLoaded = () => {
+      if (Number.isFinite(a.duration) && a.duration > 0) setSecs(a.duration);
+    };
+    const onError = () => setSecs(null);
+
+    a.addEventListener("loadedmetadata", onLoaded);
+    a.addEventListener("error", onError);
+    a.load?.();
+
+    return () => {
+      a.removeEventListener("loadedmetadata", onLoaded);
+      a.removeEventListener("error", onError);
+      a.src = "";
+    };
+  }, [src]);
+
+  return secs;
+}
 
 function useAuthModals() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
 
-    const openLogin = () => {
+  const openLogin = () => {
     setIsSignUpModalOpen(false);
     setIsLoginModalOpen(true);
   };
@@ -55,21 +127,24 @@ function useAuthModals() {
   return { isLoginModalOpen, isSignUpModalOpen, openLogin, openSignup, closeLogin, closeSignup };
 }
 
-export default function BookPage() {
+const toBool = (v: any) => v === true || v === "true" || v === 1 || v === "1";
 
+export default function BookPage() {
+ 
   const params = useParams();
   const id = params.id as string | undefined;
 
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const { user: currentUser } = useAuth(); 
+  const { user: currentUser } = useAuth();
+  const { isPremium, loading: membershipLoading } = useMembership(currentUser);
   const router = useRouter();
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSize, setActiveSize] = useState<"small" | "medium" | "large" | "xlarge">("small");
 
-    const {
+  const {
     isLoginModalOpen,
     isSignUpModalOpen,
     openLogin,
@@ -96,7 +171,7 @@ export default function BookPage() {
     })();
   }, [id]);
 
-const handleLogout = async () => {
+  const handleLogout = async () => {
     try {
       await signOut(auth);
     } catch (error) {
@@ -104,14 +179,16 @@ const handleLogout = async () => {
     }
   };
 
-
-  const handleReadOrListen = (type: "read" | "listen") => {
+  const handleReadOrListen = (_type: "read" | "listen") => {
     if (!currentUser) {
       openLogin();
       return;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (book?.subscriptionRequired && !(currentUser as any)?.isSubscribed) {
+    if (membershipLoading) return;
+
+    const isPremiumBook = toBool(book?.subscriptionRequired);
+
+    if (isPremiumBook && !isPremium) {
       router.push("/choose-plan");
       return;
     }
@@ -127,7 +204,9 @@ const handleLogout = async () => {
     alert("Added to library!");
   };
 
-
+  const audioSecs = useAudioDuration(book?.audioLink);
+  const secondsFromApi = toSeconds(book?.duration);
+  const durationClock = formatClock(secondsFromApi ?? audioSecs);
 
   return (
     <div className="flex min-h-screen bg-white">
@@ -135,7 +214,7 @@ const handleLogout = async () => {
       <aside className="hidden md:block bg-white">
         <Sidebar
           activeSize={activeSize}
-       setActiveSize={setActiveSize}
+          setActiveSize={setActiveSize}
           onLogoutClick={handleLogout}
           onLoginClick={openLogin}
           currentUser={currentUser}
@@ -155,8 +234,8 @@ const handleLogout = async () => {
           >
             <Sidebar
               isDrawer
-             activeSize={activeSize}
-             setActiveSize={setActiveSize}
+              activeSize={activeSize}
+              setActiveSize={setActiveSize}
               onLogoutClick={handleLogout}
               onLoginClick={openLogin}
               currentUser={currentUser}
@@ -165,7 +244,7 @@ const handleLogout = async () => {
         </div>
       )}
 
-       {/* Auth Modals */}
+      {/* Auth Modals */}
       {isLoginModalOpen && (
         <LoginModal onClose={closeLogin} onOpenSignup={openSignup} />
       )}
@@ -177,7 +256,12 @@ const handleLogout = async () => {
       <main className="flex-1 px-8 py-6 ml-0 md:ml-[200px]">
         <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
           <div className="flex items-center gap-2">
-            <SearchBar />
+            <SearchBar
+              onSelect={(b) => {
+                const href = `/book/${encodeURIComponent(b.id)}`;
+                router.push(href);
+              }}
+            />
             {/* Burger menu for mobile */}
             <button
               className="block md:hidden ml-3 p-2 mb-6"
@@ -244,7 +328,7 @@ const handleLogout = async () => {
                     </div>
                     <div className="flex items-center gap-1">
                       <ClockIcon className="w-5 h-5 mr-1" />
-                      {book.duration || "-"}
+                      <span>{durationClock}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <MicrophoneIcon className="w-5 h-5 mr-1" />
@@ -261,7 +345,9 @@ const handleLogout = async () => {
                 <div className="flex gap-4 mb-6">
                   <button
                     onClick={() => handleReadOrListen("read")}
-                    className="flex items-center justify-center w-[144px] h-[48px] !bg-[#032b41] text-white text-[18px] rounded cursor-pointer gap-2 transition duration-200 opacity-100 hover:opacity-80"
+                    disabled={membershipLoading}
+                    aria-disabled={membershipLoading}
+                    className="flex items-center justify-center w-[144px] h-[48px] !bg-[#032b41] text-white text-[18px] rounded cursor-pointer gap-2 transition duration-200 opacity-100 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 1024 1024" height="1.5em" width="2em" xmlns="http://www.w3.org/2000/svg">
                       <path d="M928 161H699.2c-49.1 0-97.1 14.1-138.4 40.7L512 233l-48.8-31.3A255.2 255.2 0 0 0 324.8 161H96c-17.7 0-32 14.3-32 32v568c0 17.7 14.3 32 32 32h228.8c49.1 0 97.1 14.1 138.4 40.7l44.4 28.6c1.3.8 2.8 1.3 4.3 1.3s3-.4 4.3-1.3l44.4-28.6C602 807.1 650.1 793 699.2 793H928c17.7 0 32-14.3 32-32V193c0-17.7-14.3-32-32-32zM324.8 721H136V233h188.8c35.4 0 69.8 10.1 99.5 29.2l48.8 31.3 6.9 4.5v462c-47.6-25.6-100.8-39-155.2-39zm563.2 0H699.2c-54.4 0-107.6 13.4-155.2 39V298l6.9-4.5 48.8-31.3c29.7-19.1 64.1-29.2 99.5-29.2H888v488zM396.9 361H211.1c-3.9 0-7.1 3.4-7.1 7.5v45c0 4.1 3.2 7.5 7.1 7.5h185.7c3.9 0 7.1-3.4 7.1-7.5v-45c.1-4.1-3.1-7.5-7-7.5zm223.1 7.5v45c0 4.1 3.2 7.5 7.1 7.5h185.7c3.9 0 7.1-3.4 7.1-7.5v-45c0-4.1-3.2-7.5-7.1-7.5H627.1c-3.9 0-7.1 3.4-7.1 7.5zM396.9 501H211.1c-3.9 0-7.1 3.4-7.1 7.5v45c0 4.1 3.2 7.5 7.1 7.5h185.7c3.9 0 7.1-3.4 7.1-7.5v-45c.1-4.1-3.1-7.5-7-7.5z"></path>
@@ -271,7 +357,9 @@ const handleLogout = async () => {
 
                   <button
                     onClick={() => handleReadOrListen("listen")}
-                    className="flex items-center justify-center w-[144px] h-12 !bg-[#032b41] text-white text-[18px] rounded cursor-pointer gap-2 transition duration-200 opacity-100 hover:opacity-80"
+                    disabled={membershipLoading}
+                    aria-disabled={membershipLoading}
+                    className="flex items-center justify-center w-[144px] h-12 !bg-[#032b41] text-white text-[18px] rounded cursor-pointer gap-2 transition duration-200 opacity-100 hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <svg stroke="currentColor" fill="currentColor" strokeWidth="0" viewBox="0 0 1024 1024" height="1.5em" width="1.5em" xmlns="http://www.w3.org/2000/svg">
                       <path d="M842 454c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8 0 140.3-113.7 254-254 254S258 594.3 258 454c0-4.4-3.6-8-8-8h-60c-4.4 0-8 3.6-8 8 0 168.7 126.6 307.9 290 327.6V884H326.7c-13.7 0-24.7 14.3-24.7 32v36c0 4.4 2.8 8 6.2 8h407.6c3.4 0 6.2-3.6 6.2-8v-36c0-17.7-11-32-24.7-32H548V782.1c165.3-18 294-158 294-328.1zM512 624c93.9 0 170-75.2 170-168V232c0-92.8-76.1-168-170-168s-170 75.2-170 168v224c0 92.8 76.1 168 170 168zm-94-392c0-50.6 41.9-92 94-92s94 41.4 94 92v224c0 50.6-41.9 92-94 92s-94-41.4-94-92V232z"></path>
@@ -280,19 +368,11 @@ const handleLogout = async () => {
                   </button>
                 </div>
 
-                <button
-                  onClick={handleAddToLibrary}
-                  className="flex items-center text-blue-600 hover:text-blue-900 text-lg font-semibold mb-7 hover:underline transition-colors duration-200 gap-2"
-                >
-                  <svg height="2em" width="1.5em" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 5v14l7-5 7 5V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z" />
-                  </svg>
-                  Add title to My Library
-                </button>
+
 
                 {/* Book description */}
                 <div className="mb-7">
-                  <h3 className="text-lg font-bold text-[#032b41] mb-2">What{'\''}s it about?</h3>
+                  <h3 className="text-lg font-bold text-[#032b41] mb-2">What{"'"}s it about?</h3>
                   <div className="flex flex-wrap gap-3 mb-5">
                     {book.tags?.map((tag) => (
                       <div
@@ -328,7 +408,7 @@ const handleLogout = async () => {
             ) : (
               book && (
                 <figure className="w-64 h-80 relative rounded-md flex items-center justify-center">
-                  <Image 
+                  <Image
                     src={book.imageLink || book.img || "/fallback.jpg"}
                     alt={book.title}
                     fill

@@ -53,10 +53,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         pathname.startsWith("/player/"),
     },
     {
-      href: "/library",
+      href: "",
       text: "My Library",
       icon: <FiBook />,
-      active: pathname === "/library",
+      disabled: true,
     },
     {
       text: "Highlights",

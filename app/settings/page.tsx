@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSubscription } from "@/hooks/useSubscription";
 import { signOut } from "firebase/auth";
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
@@ -16,26 +17,33 @@ type UserDoc = {
   role?: string | null;
   subscriptionStatus?: string | null;
   subscriptionPlanName?: string | null;
-  subscriptionPlan?: string | null; 
+  subscriptionPlan?: string | null;
   priceId?: string | null;
 };
 
 const PRICE_LABELS: Record<string, string> = {
-  "price_1RtNU9LaXqGfXK4JikVfj19M": "Premium Monthly",
-  "price_1RtNT9LaXqGfXK4JpjOyFOQA": "Premium Plus Yearly",
+  price_1RtNU9LaXqGfXK4JikVfj19M: "Premium Monthly",
+  price_1RtNT9LaXqGfXK4JpjOyFOQA: "Premium Plus Yearly",
 };
 
 function computePlanName(user?: UserDoc, fallbackPremium?: boolean): string {
   if (user?.subscriptionPlanName?.trim()) return user.subscriptionPlanName!;
-  if (user?.subscriptionPlan && !String(user.subscriptionPlan).startsWith("price_"))
+  if (
+    user?.subscriptionPlan &&
+    !String(user.subscriptionPlan).startsWith("price_")
+  )
     return String(user.subscriptionPlan);
-  if (user?.priceId && PRICE_LABELS[user.priceId]) return PRICE_LABELS[user.priceId];
+  if (user?.priceId && PRICE_LABELS[user.priceId])
+    return PRICE_LABELS[user.priceId];
   return fallbackPremium ? "Premium" : "Basic";
 }
 
 export default function SettingsPage() {
+   const router = useRouter();
   const { user: currentUser } = useAuth();
-  const { loading, isPremium, planName } = useSubscription(currentUser?.uid ?? null);
+  const { loading, isPremium, planName } = useSubscription(
+    currentUser?.uid ?? null
+  );
 
   const db = useMemo(() => getFirestore(), []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -140,7 +148,20 @@ export default function SettingsPage() {
       <main className="flex-1 py-6 px-4 ml-0 md:ml-[200px] overflow-y-auto">
         <div className="border-b border-[#e1e7ea] mb-6 w-full flex items-center justify-end">
           <div className="flex items-center gap-2">
-            <SearchBar />
+            <SearchBar
+              onSelect={(b) => {
+                const href = `/book/${encodeURIComponent(b.id)}`;
+                if (
+                  typeof window !== "undefined" &&
+                  window.location.pathname === href
+                ) {
+                  router.replace(href);
+                  router.refresh();
+                } else {
+                  router.push(href);
+                }
+              }}
+            />
             <button
               className="block md:hidden ml-3 p-2 mb-6"
               onClick={() => setSidebarOpen(true)}
@@ -238,7 +259,7 @@ function GatePrompt({
             priority
           />
 
-        <h2 className="mx-auto max-w-[640px] text-[22px] md:text-[26px] font-extrabold text-[#03314b] leading-snug">
+          <h2 className="mx-auto max-w-[640px] text-[22px] md:text-[26px] font-extrabold text-[#03314b] leading-snug">
             Log in to your account to see your details.
           </h2>
 
@@ -252,5 +273,4 @@ function GatePrompt({
       </div>
     </div>
   );
-
 }

@@ -1,6 +1,79 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { ClockIcon } from "@heroicons/react/24/outline";
+
+
+function toSeconds(input?: number | string | null): number | null {
+  if (input == null) return null;
+  if (typeof input === "number" && Number.isFinite(input)) return input;
+
+  if (typeof input === "string") {
+    const trimmed = input.trim().toLowerCase();
+
+    const parts = trimmed.split(":");
+    if (parts.length === 2 || parts.length === 3) {
+      const nums = parts.map((p) => Number(p));
+      if (nums.every((n) => Number.isFinite(n))) {
+        if (parts.length === 2) {
+          const [mm, ss] = nums;
+          return mm * 60 + ss;
+        } else {
+          const [hh, mm, ss] = nums;
+          return hh * 3600 + mm * 60 + ss;
+        }
+      }
+    }
+
+    const minMatch = trimmed.match(/^(\d+(?:\.\d+)?)\s*(m|min|mins|minute|minutes)$/);
+    if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
+
+    if (!Number.isNaN(Number(trimmed))) {
+      const n = Number(trimmed);
+      return n >= 1000 ? n : Math.round(n * 60);
+    }
+  }
+  return null;
+}
+
+function formatClock(secs?: number | null): string {
+  if (secs == null || !Number.isFinite(secs) || secs <= 0) return "-";
+  const total = Math.round(secs);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad2 = (n: number) => n.toString().padStart(2, "0");
+  return h > 0 ? `${h}:${pad2(m)}:${pad2(s)}` : `${pad2(m)}:${pad2(s)}`;
+}
+
+function useAudioDuration(src?: string) {
+  const [secs, setSecs] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!src) { setSecs(null); return; }
+
+    const a = new Audio();
+    a.preload = "metadata";
+    a.src = src;
+
+    const onLoaded = () => {
+      if (Number.isFinite(a.duration) && a.duration > 0) setSecs(a.duration);
+    };
+    const onError = () => setSecs(null);
+
+    a.addEventListener("loadedmetadata", onLoaded);
+    a.addEventListener("error", onError);
+    a.load?.();
+
+    return () => {
+      a.removeEventListener("loadedmetadata", onLoaded);
+      a.removeEventListener("error", onError);
+      a.src = "";
+    };
+  }, [src]);
+
+  return secs;
+}
 
 type Book = {
   id: string;
@@ -9,12 +82,17 @@ type Book = {
   subTitle?: string;
   imageLink?: string;
   img?: string;
-  duration?: string;
+  duration?: string | number | null;
+  audioLink?: string;
 };
 
 export default function SelectedForYou() {
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const audioSecs = useAudioDuration(book?.audioLink);
+  const secondsFromApi = toSeconds(book?.duration);
+  const durationClock = formatClock(secondsFromApi ?? audioSecs);
 
   useEffect(() => {
     async function fetchBook() {
@@ -66,26 +144,15 @@ export default function SelectedForYou() {
             <h3 className="text-lg font-bold text-gray-900">{book.title}</h3>
             <p className="text-sm text-gray-500 mb-2">{book.author}</p>
             <div className="flex items-center text-gray-600 text-sm">
-              <svg
-                className="mr-1"
-                stroke="currentColor"
-                fill="currentColor"
-                strokeWidth="0"
-                viewBox="0 0 16 16"
-                height="16"
-                width="16"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="m11.596 8.697-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"></path>
-              </svg>
-              {book.duration}
+              <ClockIcon className="w-4 h-4 mr-1" />
+              {durationClock}
             </div>
           </div>
           {/* Book Image (Right Side) */}
           <figure className="flex-shrink-0 w-32 h-32">
             <img
               className="w-full h-full object-cover rounded-md"
-              src={book.imageLink || book.img}
+              src={book.imageLink || book.img || "/fallback.jpg"}
               alt={book.title}
             />
           </figure>
