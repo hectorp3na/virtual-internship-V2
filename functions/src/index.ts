@@ -199,8 +199,10 @@ export const createCheckoutSessionV2 = onRequest(
     cors: [
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      "https://your-prod-domain.com", // TODO: set real prod origin when you deploy
-      // e.g. "https://summarist.vercel.app"
+      "https://virtual-internship-v2-oc48j452w-hector-penas-projects-330323b9.vercel.app/",
+      "https://virtual-internship-v2-oc48j452w-hector-penas-projects-330323b9.vercel.app/choose-plan",
+
+  
     ],
     secrets: [STRIPE_SECRET],
   },
