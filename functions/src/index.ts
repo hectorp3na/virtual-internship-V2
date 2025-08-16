@@ -10,6 +10,13 @@ const STRIPE_SECRET = defineSecret("STRIPE_SECRET");
 const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 const APP_BASE_URL = defineString("APP_BASE_URL");
 
+const ALLOWED_ORIGINS = new Set<string>([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://virtual-internship-v2-oc48j452w-hector-penas-projects-330323b9.vercel.app",
+  "https://virtual-internship-v2-oc48j452w-hector-penas-projects-330323b9.vercel.app/choose-plan",
+]);
+
 admin.initializeApp();
 
 let stripeSingleton: Stripe | undefined;
@@ -36,8 +43,9 @@ function getSubscriptionIdFromInvoice(inv: Stripe.Invoice): string | null {
 function getCustomerIdFromInvoice(inv: Stripe.Invoice): string | null {
   const v = inv.customer;
   if (typeof v === "string") return v;
-  if (v && typeof v === "object" && typeof (v as any).id === "string")
-    return (v as any).id;
+  if (v && typeof v === "object" && typeof (v as any).id === "string") {
+return (v as any).id;
+}
   return null;
 }
 
@@ -47,8 +55,9 @@ function getInvoiceIdFromPaymentIntent(
   const v = (pi as any).invoice;
   if (!v) return null;
   if (typeof v === "string") return v;
-  if (typeof v === "object" && typeof (v as any).id === "string")
-    return (v as any).id;
+  if (typeof v === "object" && typeof (v as any).id === "string") {
+return (v as any).id;
+}
   return null;
 }
 
@@ -58,8 +67,9 @@ function getCustomerIdFromPaymentIntent(
   const v = pi.customer;
   if (!v) return null;
   if (typeof v === "string") return v;
-  if (typeof v === "object" && typeof (v as any).id === "string")
-    return (v as any).id;
+  if (typeof v === "object" && typeof (v as any).id === "string") {
+return (v as any).id;
+}
   return null;
 }
 
@@ -73,8 +83,9 @@ function getSubscriptionIdFromSession(
 ): string | null {
   const v = s.subscription as unknown;
   if (typeof v === "string") return v;
-  if (v && typeof v === "object" && typeof (v as any).id === "string")
-    return (v as any).id;
+  if (v && typeof v === "object" && typeof (v as any).id === "string") {
+return (v as any).id;
+}
   return null;
 }
 
@@ -196,17 +207,26 @@ export const createCheckoutSessionV2 = onRequest(
   {
     region: "us-central1",
     invoker: "public",
-    cors: [
-      "http://localhost:3000",
-      "http://127.0.0.1:3000",
-      "https://virtual-internship-v2-oc48j452w-hector-penas-projects-330323b9.vercel.app/",
-      "https://virtual-internship-v2-oc48j452w-hector-penas-projects-330323b9.vercel.app/choose-plan",
-
-  
-    ],
     secrets: [STRIPE_SECRET],
   },
+
   async (req: Request, res: Response) => {
+    // ----- CORS (preflight + headers) -----
+    const origin = (req.headers.origin as string) || "";
+    if (origin && ALLOWED_ORIGINS.has(origin)) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+    }
+    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    // If you ever send cookies with fetch, also set:
+    // res.setHeader("Access-Control-Allow-Credentials", "true");
+
+    if (req.method === "OPTIONS") {
+      res.status(204).end();
+      return;
+    }
+
     if (req.method !== "POST") {
       res.status(405).send("Method Not Allowed");
       return;
